@@ -1,108 +1,183 @@
 version: '3.8'
 services:
-  router0:
-    build: ./router
-    networks:
-    - net_r0_h0
-    - net_r0_h1
-    - net_r0_r4
-    - net_r0_r2
-    - net_r0_r3
   host0_0:
     build: ./host
     networks:
-    - net_r0_h0
+      net_r0_h0:
+        ipv4_address: 192.168.1.10
   host0_1:
     build: ./host
     networks:
-    - net_r0_h1
-  router1:
+      net_r0_h1:
+        ipv4_address: 192.168.2.10
+  router0:
     build: ./router
     networks:
-    - net_r1_h0
-    - net_r1_h1
-    - net_r1_r2
+      net_r0_h0:
+        ipv4_address: 192.168.1.1
+      net_r0_h1:
+        ipv4_address: 192.168.2.1
+      net_r0_r2:
+        ipv4_address: 10.1.0.1
   host1_0:
     build: ./host
     networks:
-    - net_r1_h0
+      net_r1_h0:
+        ipv4_address: 192.168.3.10
   host1_1:
     build: ./host
     networks:
-    - net_r1_h1
-  router2:
+      net_r1_h1:
+        ipv4_address: 192.168.4.10
+  router1:
     build: ./router
     networks:
-    - net_r2_h0
-    - net_r2_h1
-    - net_r0_r2
-    - net_r1_r2
-    - net_r2_r3
+      net_r1_h0:
+        ipv4_address: 192.168.3.1
+      net_r1_h1:
+        ipv4_address: 192.168.4.1
+      net_r1_r2:
+        ipv4_address: 10.2.0.1
   host2_0:
     build: ./host
     networks:
-    - net_r2_h0
+      net_r2_h0:
+        ipv4_address: 192.168.5.10
   host2_1:
     build: ./host
     networks:
-    - net_r2_h1
-  router3:
+      net_r2_h1:
+        ipv4_address: 192.168.6.10
+  router2:
     build: ./router
     networks:
-    - net_r3_h0
-    - net_r3_h1
-    - net_r0_r3
-    - net_r2_r3
+      net_r2_h0:
+        ipv4_address: 192.168.5.1
+      net_r2_h1:
+        ipv4_address: 192.168.6.1
+      net_r0_r2:
+        ipv4_address: 10.1.0.2
+      net_r1_r2:
+        ipv4_address: 10.2.0.2
+      net_r2_r3:
+        ipv4_address: 10.3.0.1
+      net_r2_r4:
+        ipv4_address: 10.4.0.1
   host3_0:
     build: ./host
     networks:
-    - net_r3_h0
+      net_r3_h0:
+        ipv4_address: 192.168.7.10
   host3_1:
     build: ./host
     networks:
-    - net_r3_h1
-  router4:
+      net_r3_h1:
+        ipv4_address: 192.168.8.10
+  router3:
     build: ./router
     networks:
-    - net_r4_h0
-    - net_r4_h1
-    - net_r0_r4
+      net_r3_h0:
+        ipv4_address: 192.168.7.1
+      net_r3_h1:
+        ipv4_address: 192.168.8.1
+      net_r2_r3:
+        ipv4_address: 10.3.0.2
+      net_r3_r4:
+        ipv4_address: 10.5.0.1
   host4_0:
     build: ./host
     networks:
-    - net_r4_h0
+      net_r4_h0:
+        ipv4_address: 192.168.9.10
   host4_1:
     build: ./host
     networks:
-    - net_r4_h1
+      net_r4_h1:
+        ipv4_address: 192.168.10.10
+  router4:
+    build: ./router
+    networks:
+      net_r4_h0:
+        ipv4_address: 192.168.9.1
+      net_r4_h1:
+        ipv4_address: 192.168.10.1
+      net_r2_r4:
+        ipv4_address: 10.4.0.2
+      net_r3_r4:
+        ipv4_address: 10.5.0.2
 networks:
   net_r0_h0:
     driver: bridge
+    ipam:
+      config:
+      - subnet: 192.168.1.0/24
   net_r0_h1:
     driver: bridge
+    ipam:
+      config:
+      - subnet: 192.168.2.0/24
   net_r1_h0:
     driver: bridge
+    ipam:
+      config:
+      - subnet: 192.168.3.0/24
   net_r1_h1:
     driver: bridge
+    ipam:
+      config:
+      - subnet: 192.168.4.0/24
   net_r2_h0:
     driver: bridge
+    ipam:
+      config:
+      - subnet: 192.168.5.0/24
   net_r2_h1:
     driver: bridge
+    ipam:
+      config:
+      - subnet: 192.168.6.0/24
   net_r3_h0:
     driver: bridge
+    ipam:
+      config:
+      - subnet: 192.168.7.0/24
   net_r3_h1:
     driver: bridge
+    ipam:
+      config:
+      - subnet: 192.168.8.0/24
   net_r4_h0:
     driver: bridge
+    ipam:
+      config:
+      - subnet: 192.168.9.0/24
   net_r4_h1:
     driver: bridge
-  net_r0_r4:
-    driver: bridge
+    ipam:
+      config:
+      - subnet: 192.168.10.0/24
   net_r0_r2:
     driver: bridge
-  net_r0_r3:
-    driver: bridge
+    ipam:
+      config:
+      - subnet: 10.1.0.0/30
   net_r1_r2:
     driver: bridge
+    ipam:
+      config:
+      - subnet: 10.2.0.0/30
   net_r2_r3:
     driver: bridge
+    ipam:
+      config:
+      - subnet: 10.3.0.0/30
+  net_r2_r4:
+    driver: bridge
+    ipam:
+      config:
+      - subnet: 10.4.0.0/30
+  net_r3_r4:
+    driver: bridge
+    ipam:
+      config:
+      - subnet: 10.5.0.0/30
