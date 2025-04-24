@@ -1,0 +1,108 @@
+version: '3.8'
+services:
+  router0:
+    build: ./router
+    networks:
+    - net_r0_h0
+    - net_r0_h1
+    - net_r0_r4
+    - net_r0_r2
+    - net_r0_r3
+  host0_0:
+    build: ./host
+    networks:
+    - net_r0_h0
+  host0_1:
+    build: ./host
+    networks:
+    - net_r0_h1
+  router1:
+    build: ./router
+    networks:
+    - net_r1_h0
+    - net_r1_h1
+    - net_r1_r2
+  host1_0:
+    build: ./host
+    networks:
+    - net_r1_h0
+  host1_1:
+    build: ./host
+    networks:
+    - net_r1_h1
+  router2:
+    build: ./router
+    networks:
+    - net_r2_h0
+    - net_r2_h1
+    - net_r0_r2
+    - net_r1_r2
+    - net_r2_r3
+  host2_0:
+    build: ./host
+    networks:
+    - net_r2_h0
+  host2_1:
+    build: ./host
+    networks:
+    - net_r2_h1
+  router3:
+    build: ./router
+    networks:
+    - net_r3_h0
+    - net_r3_h1
+    - net_r0_r3
+    - net_r2_r3
+  host3_0:
+    build: ./host
+    networks:
+    - net_r3_h0
+  host3_1:
+    build: ./host
+    networks:
+    - net_r3_h1
+  router4:
+    build: ./router
+    networks:
+    - net_r4_h0
+    - net_r4_h1
+    - net_r0_r4
+  host4_0:
+    build: ./host
+    networks:
+    - net_r4_h0
+  host4_1:
+    build: ./host
+    networks:
+    - net_r4_h1
+networks:
+  net_r0_h0:
+    driver: bridge
+  net_r0_h1:
+    driver: bridge
+  net_r1_h0:
+    driver: bridge
+  net_r1_h1:
+    driver: bridge
+  net_r2_h0:
+    driver: bridge
+  net_r2_h1:
+    driver: bridge
+  net_r3_h0:
+    driver: bridge
+  net_r3_h1:
+    driver: bridge
+  net_r4_h0:
+    driver: bridge
+  net_r4_h1:
+    driver: bridge
+  net_r0_r4:
+    driver: bridge
+  net_r0_r2:
+    driver: bridge
+  net_r0_r3:
+    driver: bridge
+  net_r1_r2:
+    driver: bridge
+  net_r2_r3:
+    driver: bridge

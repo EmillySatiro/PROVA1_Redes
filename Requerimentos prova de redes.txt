@@ -1,0 +1,4 @@
+pip install networkx
+pip install matplotlib
+docker pull python:3.10-slim
+
