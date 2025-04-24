@@ -1,10 +1,15 @@
+"""
+Este script gera um arquivo `docker-compose.yml` configurado com uma topologia de rede simulada,
+incluindo roteadores, hosts e conexões ponto-a-ponto entre roteadores. Além disso, ele cria uma
+visualização gráfica da topologia de rede utilizando o NetworkX e Matplotlib.
+"""
 import networkx as nx
 import random
 import yaml
 import matplotlib.pyplot as plt
 
 # CONFIGURAÇÕES
-num_roteadores = 5
+num_roteadores = 20
 hosts_por_roteador = 2
 
 grafo = nx.connected_watts_strogatz_graph(num_roteadores, k=2, p=0.7)
