@@ -1,19 +1,22 @@
 """
-Este script gera um arquivo `docker-compose.yml` configurado com uma topologia de rede simulada,
-incluindo roteadores, hosts e conexões ponto-a-ponto entre roteadores. Além disso, ele cria uma
-visualização gráfica da topologia de rede utilizando o NetworkX e Matplotlib.
+Este script gera:
+- docker-compose.yml com a topologia simulada (roteadores + hosts)
+- Topologia_rede.png com o grafo visual
+- conexoes_rede.csv com as conexões: Origem, Destino, Custo
 """
+
 import networkx as nx
 import random
 import yaml
 import matplotlib.pyplot as plt
+import csv
 
 # CONFIGURAÇÕES
-num_roteadores = 20
+num_roteadores = 5
 hosts_por_roteador = 2
 
+# Gerar grafo conectado com pesos
 grafo = nx.connected_watts_strogatz_graph(num_roteadores, k=2, p=0.7)
-
 for (u, v) in grafo.edges():
     grafo.edges[u, v]['weight'] = random.randint(1, 10)
 
@@ -23,87 +26,83 @@ compose = {
     'networks': {}
 }
 
-subrede_base = 1  # para hosts: começa em 192.168.X.0/24
-pontoaponto_base = 1  # para links: começa em 10.X.0.0/30
+subrede_base = 1
+pontoaponto_base = 1
 
-# Criar roteadores e hosts
-for r in grafo.nodes():
-    router_name = f"router{r}"
-    router_networks = []
-    
-    for h in range(hosts_por_roteador):
-        host_name = f"host{r}_{h}"
-        net_name = f"net_r{r}_h{h}"
-        subnet = f"192.168.{subrede_base}.0/24"
-        ip_host = f"192.168.{subrede_base}.10"
-        ip_router = f"192.168.{subrede_base}.1"
+# CSV simplificado: Origem, Destino, Custo
+with open("conexoes_rede.csv", mode='w', newline='') as csvfile:
+    writer = csv.writer(csvfile)
+    writer.writerow(['Origem', 'Destino', 'Custo'])
 
-        # Host
-        compose['services'][host_name] = {
-            'build': './host',
-            'networks': {
-                net_name: {
-                    'ipv4_address': ip_host
+    # Criar roteadores e hosts
+    for r in grafo.nodes():
+        router_name = f"router{r}"
+        router_networks = []
+
+        for h in range(hosts_por_roteador):
+            host_name = f"host{r}_{h}"
+            net_name = f"net_r{r}_h{h}"
+            subnet = f"192.168.{subrede_base}.0/24"
+            ip_host = f"192.168.{subrede_base}.10"
+            ip_router = f"192.168.{subrede_base}.1"
+
+            # Host
+            compose['services'][host_name] = {
+                'build': './host',
+                'networks': {
+                    net_name: {'ipv4_address': ip_host}
                 }
             }
-        }
 
-        # Network bridge
+            # Rede
+            compose['networks'][net_name] = {
+                'driver': 'bridge',
+                'ipam': {'config': [{'subnet': subnet}]}
+            }
+
+            # Roteador
+            router_networks.append({net_name: {'ipv4_address': ip_router}})
+
+            # CSV: host → roteador
+            writer.writerow([host_name, router_name, '-'])
+
+            subrede_base += 1
+
+        # Roteador final
+        compose['services'][router_name] = {
+            'build': './router',
+            'networks': {}
+        }
+        for net in router_networks:
+            compose['services'][router_name]['networks'].update(net)
+
+    # Conectar roteadores entre si
+    for (u, v, d) in grafo.edges(data=True):
+        net_name = f"net_r{u}_r{v}"
+        subnet = f"10.{pontoaponto_base}.0.0/30"
+        ip_u = f"10.{pontoaponto_base}.0.1"
+        ip_v = f"10.{pontoaponto_base}.0.2"
+
         compose['networks'][net_name] = {
             'driver': 'bridge',
-            'ipam': {
-                'config': [{'subnet': subnet}]
-            }
+            'ipam': {'config': [{'subnet': subnet}]}
         }
 
-        # Adiciona a mesma rede ao roteador
-        router_networks.append({
-            net_name: {'ipv4_address': ip_router}
-        })
+        compose['services'][f'router{u}']['networks'][net_name] = {'ipv4_address': ip_u}
+        compose['services'][f'router{v}']['networks'][net_name] = {'ipv4_address': ip_v}
 
-        subrede_base += 1
+        # CSV: roteador ↔ roteador com custo
+        writer.writerow([f"router{u}", f"router{v}", d['weight']])
 
-    compose['services'][router_name] = {
-        'build': './router',
-        'networks': {}
-    }
-    # insere depois para evitar sobrescrever
-    for net in router_networks:
-        compose['services'][router_name]['networks'].update(net)
+        pontoaponto_base += 1
 
-# Conectar roteadores entre si com redes ponto-a-ponto
-for (u, v, d) in grafo.edges(data=True):
-    net_name = f"net_r{u}_r{v}"
-    subnet = f"10.{pontoaponto_base}.0.0/30"
-    ip_u = f"10.{pontoaponto_base}.0.1"
-    ip_v = f"10.{pontoaponto_base}.0.2"
-
-    compose['networks'][net_name] = {
-        'driver': 'bridge',
-        'ipam': {
-            'config': [{'subnet': subnet}]
-        }
-    }
-
-    # Adiciona rede aos roteadores com IP fixo
-    compose['services'][f'router{u}']['networks'][net_name] = {
-        'ipv4_address': ip_u
-    }
-    compose['services'][f'router{v}']['networks'][net_name] = {
-        'ipv4_address': ip_v
-    }
-
-    pontoaponto_base += 1
-
-# Salvar o docker-compose.yml
+# Salvar docker-compose.yml
 with open('docker-compose.yml', 'w') as f:
     yaml.dump(compose, f, sort_keys=False)
+print("✅ docker-compose.yml gerado!")
 
-print("✅ docker-compose.yml gerado com IPs e subredes configuradas!")
-
-# Criar o grafo visual
+# Criar imagem da topologia
 visual_grafo = nx.Graph()
-
 for r in grafo.nodes():
     router_name = f"router{r}"
     visual_grafo.add_node(router_name, type='router')
@@ -132,4 +131,5 @@ nx.draw(
     edge_color='gray'
 )
 plt.title("Topologia de Rede com Subredes e IPs")
+plt.savefig("Topologia_rede.png", dpi=300)
 plt.show()

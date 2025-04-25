@@ -17,9 +17,9 @@ services:
         ipv4_address: 192.168.1.1
       net_r0_h1:
         ipv4_address: 192.168.2.1
-      net_r0_r4:
+      net_r0_r1:
         ipv4_address: 10.1.0.1
-      net_r0_r14:
+      net_r0_r4:
         ipv4_address: 10.2.0.1
   host1_0:
     build: ./host
@@ -38,7 +38,9 @@ services:
         ipv4_address: 192.168.3.1
       net_r1_h1:
         ipv4_address: 192.168.4.1
-      net_r1_r19:
+      net_r0_r1:
+        ipv4_address: 10.1.0.2
+      net_r1_r4:
         ipv4_address: 10.3.0.1
   host2_0:
     build: ./host
@@ -57,8 +59,10 @@ services:
         ipv4_address: 192.168.5.1
       net_r2_h1:
         ipv4_address: 192.168.6.1
-      net_r2_r7:
+      net_r2_r4:
         ipv4_address: 10.4.0.1
+      net_r2_r3:
+        ipv4_address: 10.5.0.1
   host3_0:
     build: ./host
     networks:
@@ -76,8 +80,8 @@ services:
         ipv4_address: 192.168.7.1
       net_r3_h1:
         ipv4_address: 192.168.8.1
-      net_r3_r4:
-        ipv4_address: 10.5.0.1
+      net_r2_r3:
+        ipv4_address: 10.5.0.2
   host4_0:
     build: ./host
     networks:
@@ -96,330 +100,11 @@ services:
       net_r4_h1:
         ipv4_address: 192.168.10.1
       net_r0_r4:
-        ipv4_address: 10.1.0.2
-      net_r3_r4:
-        ipv4_address: 10.5.0.2
-      net_r4_r12:
-        ipv4_address: 10.6.0.1
-  host5_0:
-    build: ./host
-    networks:
-      net_r5_h0:
-        ipv4_address: 192.168.11.10
-  host5_1:
-    build: ./host
-    networks:
-      net_r5_h1:
-        ipv4_address: 192.168.12.10
-  router5:
-    build: ./router
-    networks:
-      net_r5_h0:
-        ipv4_address: 192.168.11.1
-      net_r5_h1:
-        ipv4_address: 192.168.12.1
-      net_r5_r15:
-        ipv4_address: 10.7.0.1
-      net_r5_r19:
-        ipv4_address: 10.8.0.1
-  host6_0:
-    build: ./host
-    networks:
-      net_r6_h0:
-        ipv4_address: 192.168.13.10
-  host6_1:
-    build: ./host
-    networks:
-      net_r6_h1:
-        ipv4_address: 192.168.14.10
-  router6:
-    build: ./router
-    networks:
-      net_r6_h0:
-        ipv4_address: 192.168.13.1
-      net_r6_h1:
-        ipv4_address: 192.168.14.1
-      net_r6_r7:
-        ipv4_address: 10.9.0.1
-  host7_0:
-    build: ./host
-    networks:
-      net_r7_h0:
-        ipv4_address: 192.168.15.10
-  host7_1:
-    build: ./host
-    networks:
-      net_r7_h1:
-        ipv4_address: 192.168.16.10
-  router7:
-    build: ./router
-    networks:
-      net_r7_h0:
-        ipv4_address: 192.168.15.1
-      net_r7_h1:
-        ipv4_address: 192.168.16.1
-      net_r2_r7:
-        ipv4_address: 10.4.0.2
-      net_r6_r7:
-        ipv4_address: 10.9.0.2
-      net_r7_r17:
-        ipv4_address: 10.10.0.1
-  host8_0:
-    build: ./host
-    networks:
-      net_r8_h0:
-        ipv4_address: 192.168.17.10
-  host8_1:
-    build: ./host
-    networks:
-      net_r8_h1:
-        ipv4_address: 192.168.18.10
-  router8:
-    build: ./router
-    networks:
-      net_r8_h0:
-        ipv4_address: 192.168.17.1
-      net_r8_h1:
-        ipv4_address: 192.168.18.1
-      net_r8_r11:
-        ipv4_address: 10.11.0.1
-  host9_0:
-    build: ./host
-    networks:
-      net_r9_h0:
-        ipv4_address: 192.168.19.10
-  host9_1:
-    build: ./host
-    networks:
-      net_r9_h1:
-        ipv4_address: 192.168.20.10
-  router9:
-    build: ./router
-    networks:
-      net_r9_h0:
-        ipv4_address: 192.168.19.1
-      net_r9_h1:
-        ipv4_address: 192.168.20.1
-      net_r9_r11:
-        ipv4_address: 10.12.0.1
-  host10_0:
-    build: ./host
-    networks:
-      net_r10_h0:
-        ipv4_address: 192.168.21.10
-  host10_1:
-    build: ./host
-    networks:
-      net_r10_h1:
-        ipv4_address: 192.168.22.10
-  router10:
-    build: ./router
-    networks:
-      net_r10_h0:
-        ipv4_address: 192.168.21.1
-      net_r10_h1:
-        ipv4_address: 192.168.22.1
-      net_r10_r14:
-        ipv4_address: 10.13.0.1
-      net_r10_r13:
-        ipv4_address: 10.14.0.1
-  host11_0:
-    build: ./host
-    networks:
-      net_r11_h0:
-        ipv4_address: 192.168.23.10
-  host11_1:
-    build: ./host
-    networks:
-      net_r11_h1:
-        ipv4_address: 192.168.24.10
-  router11:
-    build: ./router
-    networks:
-      net_r11_h0:
-        ipv4_address: 192.168.23.1
-      net_r11_h1:
-        ipv4_address: 192.168.24.1
-      net_r8_r11:
-        ipv4_address: 10.11.0.2
-      net_r9_r11:
-        ipv4_address: 10.12.0.2
-      net_r11_r12:
-        ipv4_address: 10.15.0.1
-  host12_0:
-    build: ./host
-    networks:
-      net_r12_h0:
-        ipv4_address: 192.168.25.10
-  host12_1:
-    build: ./host
-    networks:
-      net_r12_h1:
-        ipv4_address: 192.168.26.10
-  router12:
-    build: ./router
-    networks:
-      net_r12_h0:
-        ipv4_address: 192.168.25.1
-      net_r12_h1:
-        ipv4_address: 192.168.26.1
-      net_r4_r12:
-        ipv4_address: 10.6.0.2
-      net_r11_r12:
-        ipv4_address: 10.15.0.2
-      net_r12_r13:
-        ipv4_address: 10.16.0.1
-  host13_0:
-    build: ./host
-    networks:
-      net_r13_h0:
-        ipv4_address: 192.168.27.10
-  host13_1:
-    build: ./host
-    networks:
-      net_r13_h1:
-        ipv4_address: 192.168.28.10
-  router13:
-    build: ./router
-    networks:
-      net_r13_h0:
-        ipv4_address: 192.168.27.1
-      net_r13_h1:
-        ipv4_address: 192.168.28.1
-      net_r10_r13:
-        ipv4_address: 10.14.0.2
-      net_r12_r13:
-        ipv4_address: 10.16.0.2
-      net_r13_r15:
-        ipv4_address: 10.17.0.1
-  host14_0:
-    build: ./host
-    networks:
-      net_r14_h0:
-        ipv4_address: 192.168.29.10
-  host14_1:
-    build: ./host
-    networks:
-      net_r14_h1:
-        ipv4_address: 192.168.30.10
-  router14:
-    build: ./router
-    networks:
-      net_r14_h0:
-        ipv4_address: 192.168.29.1
-      net_r14_h1:
-        ipv4_address: 192.168.30.1
-      net_r0_r14:
         ipv4_address: 10.2.0.2
-      net_r10_r14:
-        ipv4_address: 10.13.0.2
-      net_r14_r17:
-        ipv4_address: 10.18.0.1
-  host15_0:
-    build: ./host
-    networks:
-      net_r15_h0:
-        ipv4_address: 192.168.31.10
-  host15_1:
-    build: ./host
-    networks:
-      net_r15_h1:
-        ipv4_address: 192.168.32.10
-  router15:
-    build: ./router
-    networks:
-      net_r15_h0:
-        ipv4_address: 192.168.31.1
-      net_r15_h1:
-        ipv4_address: 192.168.32.1
-      net_r5_r15:
-        ipv4_address: 10.7.0.2
-      net_r13_r15:
-        ipv4_address: 10.17.0.2
-  host16_0:
-    build: ./host
-    networks:
-      net_r16_h0:
-        ipv4_address: 192.168.33.10
-  host16_1:
-    build: ./host
-    networks:
-      net_r16_h1:
-        ipv4_address: 192.168.34.10
-  router16:
-    build: ./router
-    networks:
-      net_r16_h0:
-        ipv4_address: 192.168.33.1
-      net_r16_h1:
-        ipv4_address: 192.168.34.1
-      net_r16_r17:
-        ipv4_address: 10.19.0.1
-  host17_0:
-    build: ./host
-    networks:
-      net_r17_h0:
-        ipv4_address: 192.168.35.10
-  host17_1:
-    build: ./host
-    networks:
-      net_r17_h1:
-        ipv4_address: 192.168.36.10
-  router17:
-    build: ./router
-    networks:
-      net_r17_h0:
-        ipv4_address: 192.168.35.1
-      net_r17_h1:
-        ipv4_address: 192.168.36.1
-      net_r7_r17:
-        ipv4_address: 10.10.0.2
-      net_r14_r17:
-        ipv4_address: 10.18.0.2
-      net_r16_r17:
-        ipv4_address: 10.19.0.2
-      net_r17_r18:
-        ipv4_address: 10.20.0.1
-  host18_0:
-    build: ./host
-    networks:
-      net_r18_h0:
-        ipv4_address: 192.168.37.10
-  host18_1:
-    build: ./host
-    networks:
-      net_r18_h1:
-        ipv4_address: 192.168.38.10
-  router18:
-    build: ./router
-    networks:
-      net_r18_h0:
-        ipv4_address: 192.168.37.1
-      net_r18_h1:
-        ipv4_address: 192.168.38.1
-      net_r17_r18:
-        ipv4_address: 10.20.0.2
-  host19_0:
-    build: ./host
-    networks:
-      net_r19_h0:
-        ipv4_address: 192.168.39.10
-  host19_1:
-    build: ./host
-    networks:
-      net_r19_h1:
-        ipv4_address: 192.168.40.10
-  router19:
-    build: ./router
-    networks:
-      net_r19_h0:
-        ipv4_address: 192.168.39.1
-      net_r19_h1:
-        ipv4_address: 192.168.40.1
-      net_r1_r19:
+      net_r1_r4:
         ipv4_address: 10.3.0.2
-      net_r5_r19:
-        ipv4_address: 10.8.0.2
+      net_r2_r4:
+        ipv4_address: 10.4.0.2
 networks:
   net_r0_h0:
     driver: bridge
@@ -471,253 +156,28 @@ networks:
     ipam:
       config:
       - subnet: 192.168.10.0/24
-  net_r5_h0:
-    driver: bridge
-    ipam:
-      config:
-      - subnet: 192.168.11.0/24
-  net_r5_h1:
-    driver: bridge
-    ipam:
-      config:
-      - subnet: 192.168.12.0/24
-  net_r6_h0:
-    driver: bridge
-    ipam:
-      config:
-      - subnet: 192.168.13.0/24
-  net_r6_h1:
-    driver: bridge
-    ipam:
-      config:
-      - subnet: 192.168.14.0/24
-  net_r7_h0:
-    driver: bridge
-    ipam:
-      config:
-      - subnet: 192.168.15.0/24
-  net_r7_h1:
-    driver: bridge
-    ipam:
-      config:
-      - subnet: 192.168.16.0/24
-  net_r8_h0:
-    driver: bridge
-    ipam:
-      config:
-      - subnet: 192.168.17.0/24
-  net_r8_h1:
-    driver: bridge
-    ipam:
-      config:
-      - subnet: 192.168.18.0/24
-  net_r9_h0:
-    driver: bridge
-    ipam:
-      config:
-      - subnet: 192.168.19.0/24
-  net_r9_h1:
-    driver: bridge
-    ipam:
-      config:
-      - subnet: 192.168.20.0/24
-  net_r10_h0:
-    driver: bridge
-    ipam:
-      config:
-      - subnet: 192.168.21.0/24
-  net_r10_h1:
-    driver: bridge
-    ipam:
-      config:
-      - subnet: 192.168.22.0/24
-  net_r11_h0:
-    driver: bridge
-    ipam:
-      config:
-      - subnet: 192.168.23.0/24
-  net_r11_h1:
-    driver: bridge
-    ipam:
-      config:
-      - subnet: 192.168.24.0/24
-  net_r12_h0:
-    driver: bridge
-    ipam:
-      config:
-      - subnet: 192.168.25.0/24
-  net_r12_h1:
-    driver: bridge
-    ipam:
-      config:
-      - subnet: 192.168.26.0/24
-  net_r13_h0:
-    driver: bridge
-    ipam:
-      config:
-      - subnet: 192.168.27.0/24
-  net_r13_h1:
-    driver: bridge
-    ipam:
-      config:
-      - subnet: 192.168.28.0/24
-  net_r14_h0:
-    driver: bridge
-    ipam:
-      config:
-      - subnet: 192.168.29.0/24
-  net_r14_h1:
-    driver: bridge
-    ipam:
-      config:
-      - subnet: 192.168.30.0/24
-  net_r15_h0:
-    driver: bridge
-    ipam:
-      config:
-      - subnet: 192.168.31.0/24
-  net_r15_h1:
-    driver: bridge
-    ipam:
-      config:
-      - subnet: 192.168.32.0/24
-  net_r16_h0:
-    driver: bridge
-    ipam:
-      config:
-      - subnet: 192.168.33.0/24
-  net_r16_h1:
-    driver: bridge
-    ipam:
-      config:
-      - subnet: 192.168.34.0/24
-  net_r17_h0:
-    driver: bridge
-    ipam:
-      config:
-      - subnet: 192.168.35.0/24
-  net_r17_h1:
-    driver: bridge
-    ipam:
-      config:
-      - subnet: 192.168.36.0/24
-  net_r18_h0:
-    driver: bridge
-    ipam:
-      config:
-      - subnet: 192.168.37.0/24
-  net_r18_h1:
-    driver: bridge
-    ipam:
-      config:
-      - subnet: 192.168.38.0/24
-  net_r19_h0:
-    driver: bridge
-    ipam:
-      config:
-      - subnet: 192.168.39.0/24
-  net_r19_h1:
-    driver: bridge
-    ipam:
-      config:
-      - subnet: 192.168.40.0/24
-  net_r0_r4:
+  net_r0_r1:
     driver: bridge
     ipam:
       config:
       - subnet: 10.1.0.0/30
-  net_r0_r14:
+  net_r0_r4:
     driver: bridge
     ipam:
       config:
       - subnet: 10.2.0.0/30
-  net_r1_r19:
+  net_r1_r4:
     driver: bridge
     ipam:
       config:
       - subnet: 10.3.0.0/30
-  net_r2_r7:
+  net_r2_r4:
     driver: bridge
     ipam:
       config:
       - subnet: 10.4.0.0/30
-  net_r3_r4:
+  net_r2_r3:
     driver: bridge
     ipam:
       config:
       - subnet: 10.5.0.0/30
-  net_r4_r12:
-    driver: bridge
-    ipam:
-      config:
-      - subnet: 10.6.0.0/30
-  net_r5_r15:
-    driver: bridge
-    ipam:
-      config:
-      - subnet: 10.7.0.0/30
-  net_r5_r19:
-    driver: bridge
-    ipam:
-      config:
-      - subnet: 10.8.0.0/30
-  net_r6_r7:
-    driver: bridge
-    ipam:
-      config:
-      - subnet: 10.9.0.0/30
-  net_r7_r17:
-    driver: bridge
-    ipam:
-      config:
-      - subnet: 10.10.0.0/30
-  net_r8_r11:
-    driver: bridge
-    ipam:
-      config:
-      - subnet: 10.11.0.0/30
-  net_r9_r11:
-    driver: bridge
-    ipam:
-      config:
-      - subnet: 10.12.0.0/30
-  net_r10_r14:
-    driver: bridge
-    ipam:
-      config:
-      - subnet: 10.13.0.0/30
-  net_r10_r13:
-    driver: bridge
-    ipam:
-      config:
-      - subnet: 10.14.0.0/30
-  net_r11_r12:
-    driver: bridge
-    ipam:
-      config:
-      - subnet: 10.15.0.0/30
-  net_r12_r13:
-    driver: bridge
-    ipam:
-      config:
-      - subnet: 10.16.0.0/30
-  net_r13_r15:
-    driver: bridge
-    ipam:
-      config:
-      - subnet: 10.17.0.0/30
-  net_r14_r17:
-    driver: bridge
-    ipam:
-      config:
-      - subnet: 10.18.0.0/30
-  net_r16_r17:
-    driver: bridge
-    ipam:
-      config:
-      - subnet: 10.19.0.0/30
-  net_r17_r18:
-    driver: bridge
-    ipam:
-      config:
-      - subnet: 10.20.0.0/30
