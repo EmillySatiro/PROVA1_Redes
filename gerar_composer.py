@@ -1,10 +1,3 @@
-"""
-Este script gera:
-- docker-compose.yml com a topologia simulada (roteadores + hosts)
-- Topologia_rede.png com o grafo visual
-- conexoes_rede.csv com as conexões: Origem, Destino, Custo
-"""
-
 import networkx as nx
 import random
 import yaml
@@ -36,19 +29,20 @@ with open("conexoes_rede.csv", mode='w', newline='') as csvfile:
 
     # Criar roteadores e hosts
     for r in grafo.nodes():
-        router_name = f"router{r}"
+        router_name = f"router{r+1:02d}"  # Nomenclatura ajustada para router01, router02, etc.
         router_networks = []
 
         for h in range(hosts_por_roteador):
-            host_name = f"host{r}_{h}"
-            net_name = f"net_r{r}_h{h}"
+            host_name = f"{router_name}_host{h+1:02d}"  # Nomenclatura ajustada para router01_host01, router01_host02, etc.
+            net_name = f"{router_name}_host{h+1:02d}_net"
             subnet = f"192.168.{subrede_base}.0/24"
-            ip_host = f"192.168.{subrede_base}.10"
+            ip_host = f"192.168.{subrede_base}.2"
             ip_router = f"192.168.{subrede_base}.1"
 
             # Host
             compose['services'][host_name] = {
                 'build': './host',
+                'container_name': host_name,
                 'networks': {
                     net_name: {'ipv4_address': ip_host}
                 }
@@ -60,40 +54,39 @@ with open("conexoes_rede.csv", mode='w', newline='') as csvfile:
                 'ipam': {'config': [{'subnet': subnet}]}
             }
 
-            # Roteador
             router_networks.append({net_name: {'ipv4_address': ip_router}})
-
-            # CSV: host → roteador
             writer.writerow([host_name, router_name, '-'])
-
             subrede_base += 1
 
-        # Roteador final
+        # Roteador
         compose['services'][router_name] = {
             'build': './router',
+            'container_name': router_name,
+            'volumes': ['./router/router.py:/app/router.py'],
+            'cap_add': ['NET_ADMIN'],
             'networks': {}
         }
         for net in router_networks:
             compose['services'][router_name]['networks'].update(net)
 
-    # Conectar roteadores entre si
+    # Conexões ponto-a-ponto entre roteadores
     for (u, v, d) in grafo.edges(data=True):
-        net_name = f"net_r{u}_r{v}"
-        subnet = f"10.{pontoaponto_base}.0.0/30"
-        ip_u = f"10.{pontoaponto_base}.0.1"
-        ip_v = f"10.{pontoaponto_base}.0.2"
+        router_u = f"router{u+1:02d}"  # Ajuste para router01, router02, etc.
+        router_v = f"router{v+1:02d}"  # Ajuste para router01, router02, etc.
+        net_name = f"{router_u}_{router_v}_net"
+        subnet = f"10.10.{pontoaponto_base}.0/30"
+        ip_u = f"10.10.{pontoaponto_base}.1"
+        ip_v = f"10.10.{pontoaponto_base}.2"
 
         compose['networks'][net_name] = {
             'driver': 'bridge',
             'ipam': {'config': [{'subnet': subnet}]}
         }
 
-        compose['services'][f'router{u}']['networks'][net_name] = {'ipv4_address': ip_u}
-        compose['services'][f'router{v}']['networks'][net_name] = {'ipv4_address': ip_v}
+        compose['services'][router_u]['networks'][net_name] = {'ipv4_address': ip_u}
+        compose['services'][router_v]['networks'][net_name] = {'ipv4_address': ip_v}
 
-        # CSV: roteador ↔ roteador com custo
-        writer.writerow([f"router{u}", f"router{v}", d['weight']])
-
+        writer.writerow([router_u, router_v, d['weight']])
         pontoaponto_base += 1
 
 # Salvar docker-compose.yml
@@ -104,15 +97,15 @@ print("✅ docker-compose.yml gerado!")
 # Criar imagem da topologia
 visual_grafo = nx.Graph()
 for r in grafo.nodes():
-    router_name = f"router{r}"
+    router_name = f"router{r+1:02d}"
     visual_grafo.add_node(router_name, type='router')
     for h in range(hosts_por_roteador):
-        host_name = f"host{r}_{h}"
+        host_name = f"{router_name}_host{h+1:02d}"
         visual_grafo.add_node(host_name, type='host')
         visual_grafo.add_edge(router_name, host_name)
 
 for (u, v) in grafo.edges():
-    visual_grafo.add_edge(f"router{u}", f"router{v}")
+    visual_grafo.add_edge(f"router{u+1:02d}", f"router{v+1:02d}")
 
 node_colors = [
     'lightgreen' if data['type'] == 'router' else 'lightblue'
