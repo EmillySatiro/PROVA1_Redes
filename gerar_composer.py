@@ -23,7 +23,7 @@ subrede_base = 1
 pontoaponto_base = 1
 
 # CSV simplificado: Origem, Destino, Custo
-with open("conexoes_rede.csv", mode='w', newline='') as csvfile:
+with open("router/conexoes_rede.csv", mode='w', newline='') as csvfile:
     writer = csv.writer(csvfile)
     writer.writerow(['Origem', 'Destino', 'Custo'])
 
@@ -37,7 +37,7 @@ with open("conexoes_rede.csv", mode='w', newline='') as csvfile:
             net_name = f"{router_name}_host{h+1:02d}_net"
             subnet = f"192.168.{subrede_base}.0/24"
             ip_host = f"192.168.{subrede_base}.2"
-            ip_router = f"192.168.{subrede_base}.1"
+            ip_router = f"192.168.{subrede_base}.10"
 
             # Host
             compose['services'][host_name] = {
@@ -74,8 +74,8 @@ with open("conexoes_rede.csv", mode='w', newline='') as csvfile:
         router_u = f"router{u+1:02d}"  # Ajuste para router01, router02, etc.
         router_v = f"router{v+1:02d}"  # Ajuste para router01, router02, etc.
         net_name = f"{router_u}_{router_v}_net"
-        subnet = f"10.10.{pontoaponto_base}.0/30"
-        ip_u = f"10.10.{pontoaponto_base}.1"
+        subnet = f"10.10.{pontoaponto_base}.0/24"
+        ip_u = f"10.10.{pontoaponto_base}.10"
         ip_v = f"10.10.{pontoaponto_base}.2"
 
         compose['networks'][net_name] = {
@@ -125,4 +125,4 @@ nx.draw(
 )
 plt.title("Topologia de Rede com Subredes e IPs")
 plt.savefig("Topologia_rede.png", dpi=300)
-plt.show()
+

@@ -1,10 +1,13 @@
-
 FROM python:3.10-slim
 
 WORKDIR /app
 
+# Copia o script router.py e o CSV a partir do diretório raiz (contexto de build)
 COPY router.py .
-# 3. Copia o arquivo "router.py" do diretório local para o diretório de trabalho no container.
+COPY conexoes_rede.csv .
 
+# Instala a biblioteca necessária
+RUN pip install --no-cache-dir networkx
+
+# Comando padrão ao iniciar o container
 CMD ["python", "router.py"]
-# 4. Define o comando padrão para executar o script "router.py" usando o interpretador Python.

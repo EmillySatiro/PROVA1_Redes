@@ -2,55 +2,58 @@ import time
 import csv
 import networkx as nx
 
-# Função para construir o grafo a partir do CSV
-def construir_grafo_do_csv(caminho_csv):
-    grafo = nx.Graph()
-    with open(caminho_csv, newline='') as csvfile:
-        leitor = csv.reader(csvfile)
-        next(leitor)  # Pula o cabeçalho
-        for origem, destino, custo in leitor:
-            # Verifica se o custo é um número inteiro válido
-            try:
-                custo_int = int(custo)
-                grafo.add_edge(origem.strip(), destino.strip(), weight=custo_int)
-            except ValueError:
-                print(f"Valor inválido para o custo entre {origem.strip()} e {destino.strip()}: {custo}. Ignorando essa linha.")
-    return grafo
+import socket
+import time
+import json
 
-# Função para construir o pacote HELLO
-def construir_pacote_hello(router_id, interface="eth0"):
-    return {
-        "type": "HELLO",
-        "router_id": router_id,
-        "timestamp": int(time.time()),
-        "interface": interface
-    }
+class PacoteHello:
+    def __init__(self, router_id, ip_address, neighbors):
+        self.type = "HELLO"
+        self.router_id = router_id
+        self.timestamp = time.time()
+        self.ip_address = ip_address
+        self.known_neighbors = list(neighbors.keys())  
 
-# Função para construir o pacote LSA
-def construir_pacote_lsa(router_id, vizinhos, numero_sequencia):
-    return {
-        "type": "LSA",
-        "router_id": router_id,
-        "timestamp": round(time.time(), 2),
-        "sequence_number": numero_sequencia,
-        "links": [{"neighbor_id": vizinho, "cost": custo} for vizinho, custo in vizinhos]
-    }
+    def criar_pacote(self):
+        """
+        Cria a mensagem do pacote Hello no formato JSON.
+        Retorna uma string com a mensagem.
+        """
+        pacote = {
+            "type": self.type,
+            "router_id": self.router_id,
+            "timestamp": self.timestamp,
+            "ip_address": self.ip_address,
+            "known_neighbors": self.known_neighbors
+        }
+        return json.dumps(pacote)
 
-# Função principal para simular o protocolo LSD
-def simular_protocolo_lsd(caminho_csv):
-    grafo = construir_grafo_do_csv(caminho_csv)
-    numero_sequencia = 1
-    for roteador in grafo.nodes:
-        print(f"\n[ROTEADOR {roteador}] Enviando pacotes HELLO para vizinhos...")
-        for vizinho in grafo.neighbors(roteador):
-            pacote_hello = construir_pacote_hello(roteador)
-            print(f"-> HELLO para {vizinho}: {pacote_hello}")
+class EmissorHello:
+    def __init__(self, router_id, ip_address, neighbors, ip_broadcast='255.255.255.255', porta=5000, intervalo_hello=5):
+        self.ip_broadcast = ip_broadcast
+        self.porta = porta
+        self.intervalo_hello = intervalo_hello
+        self.soquete = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
+        self.soquete.setsockopt(socket.SOL_SOCKET, socket.SO_BROADCAST, 1)
+        self.router_id = router_id
+        self.ip_address = ip_address
+        self.neighbors = neighbors  # Dicionário de vizinhos
+        self.pacote_hello = PacoteHello(self.router_id, self.ip_address, self.neighbors)  # Instancia da classe PacoteHello
 
-        vizinhos_info = [(vizinho, grafo[roteador][vizinho]["weight"]) for vizinho in grafo.neighbors(roteador)]
-        pacote_lsa = construir_pacote_lsa(roteador, vizinhos_info, numero_sequencia)
-        print(f"\n[ROTEADOR {roteador}] Pacote LSA gerado:")
-        print(pacote_lsa)
-        numero_sequencia += 1
+    def enviar_hello(self):
+        """
+        Envia pacotes Hello a cada intervalo de tempo configurado.
+        """
+        while True:
+            pacote = self.pacote_hello.criar_pacote()  # Cria o pacote
+            self.soquete.sendto(pacote.encode(), (self.ip_broadcast, self.porta))  # Envia o pacote
+            print(f"[ENVIADO] {pacote}")
+            time.sleep(self.intervalo_hello)
 
 if __name__ == "__main__":
-    simular_protocolo_lsd("conexoes_rede.csv")
+    # Exemplo de uso com alguns dados fictícios
+    router_id = 1
+    ip_address = '192.168.1.1'
+    neighbors = {'192.168.1.2': 'vizinho1', '192.168.1.3': 'vizinho2'}  # Exemplo de dicionário de vizinhos
+    emissor = EmissorHello(router_id, ip_address, neighbors)  # Cria o emissor de pacotes Hello
+    emissor.enviar_hello()  # Inicia o envio dos pacotes
