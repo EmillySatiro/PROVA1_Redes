@@ -9,5 +9,7 @@ COPY conexoes_rede.csv .
 # Instala a biblioteca necessária
 RUN pip install --no-cache-dir networkx
 
+RUN pip install --no-cache-dir psutil
+ 
 # Comando padrão ao iniciar o container
 CMD ["python","-u", "router.py"]

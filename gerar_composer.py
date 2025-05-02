@@ -29,12 +29,12 @@ with open("router/conexoes_rede.csv", mode='w', newline='') as csvfile:
 
     # Criar roteadores e hosts
     for r in grafo.nodes():
-        router_name = f"router{r+1:02d}"  # Nomenclatura ajustada para router01, router02, etc.
+        router_name = f"router{r+1}"  
         router_networks = []
 
         for h in range(hosts_por_roteador):
-            host_name = f"{router_name}_host{h+1:02d}"  # Nomenclatura ajustada para router01_host01, router01_host02, etc.
-            net_name = f"{router_name}_host{h+1:02d}_net"
+            host_name = f"{router_name}_host{h+1}"  # Nomenclatura ajustada para router01_host01, router01_host02, etc.
+            net_name = f"{router_name}_host{h+1}_net"
             subnet = f"192.168.{subrede_base}.0/24"
             ip_host = f"192.168.{subrede_base}.2"
             ip_router = f"192.168.{subrede_base}.10"
@@ -62,6 +62,9 @@ with open("router/conexoes_rede.csv", mode='w', newline='') as csvfile:
         compose['services'][router_name] = {
             'build': './router',
             'container_name': router_name,
+            'environment': {
+                'CONTAINER_NAME': f"router{r+1}",
+            },
             'volumes': ['./router/router.py:/app/router.py'],
             'cap_add': ['NET_ADMIN'],
             'networks': {}
@@ -71,8 +74,8 @@ with open("router/conexoes_rede.csv", mode='w', newline='') as csvfile:
 
     # Conexões ponto-a-ponto entre roteadores
     for (u, v, d) in grafo.edges(data=True):
-        router_u = f"router{u+1:02d}"  # Ajuste para router01, router02, etc.
-        router_v = f"router{v+1:02d}"  # Ajuste para router01, router02, etc.
+        router_u = f"router{u+1}"  # Ajuste para router01, router02, etc.
+        router_v = f"router{v+1}"  # Ajuste para router01, router02, etc.
         net_name = f"{router_u}_{router_v}_net"
         subnet = f"10.10.{pontoaponto_base}.0/24"
         ip_u = f"10.10.{pontoaponto_base}.10"

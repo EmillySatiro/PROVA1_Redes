@@ -1,217 +1,227 @@
 version: '3.8'
 services:
-  router01_host01:
+  router1_host1:
     build: ./host
-    container_name: router01_host01
+    container_name: router1_host1
     networks:
-      router01_host01_net:
+      router1_host1_net:
         ipv4_address: 192.168.1.2
-  router01_host02:
+  router1_host2:
     build: ./host
-    container_name: router01_host02
+    container_name: router1_host2
     networks:
-      router01_host02_net:
+      router1_host2_net:
         ipv4_address: 192.168.2.2
-  router01:
+  router1:
     build: ./router
-    container_name: router01
+    container_name: router1
+    environment:
+      CONTAINER_NAME: router1
     volumes:
     - ./router/router.py:/app/router.py
     cap_add:
     - NET_ADMIN
     networks:
-      router01_host01_net:
+      router1_host1_net:
         ipv4_address: 192.168.1.10
-      router01_host02_net:
+      router1_host2_net:
         ipv4_address: 192.168.2.10
-      router01_router03_net:
+      router1_router5_net:
         ipv4_address: 10.10.1.10
-  router02_host01:
-    build: ./host
-    container_name: router02_host01
-    networks:
-      router02_host01_net:
-        ipv4_address: 192.168.3.2
-  router02_host02:
-    build: ./host
-    container_name: router02_host02
-    networks:
-      router02_host02_net:
-        ipv4_address: 192.168.4.2
-  router02:
-    build: ./router
-    container_name: router02
-    volumes:
-    - ./router/router.py:/app/router.py
-    cap_add:
-    - NET_ADMIN
-    networks:
-      router02_host01_net:
-        ipv4_address: 192.168.3.10
-      router02_host02_net:
-        ipv4_address: 192.168.4.10
-      router02_router05_net:
+      router1_router3_net:
         ipv4_address: 10.10.2.10
-  router03_host01:
-    build: ./host
-    container_name: router03_host01
-    networks:
-      router03_host01_net:
-        ipv4_address: 192.168.5.2
-  router03_host02:
-    build: ./host
-    container_name: router03_host02
-    networks:
-      router03_host02_net:
-        ipv4_address: 192.168.6.2
-  router03:
-    build: ./router
-    container_name: router03
-    volumes:
-    - ./router/router.py:/app/router.py
-    cap_add:
-    - NET_ADMIN
-    networks:
-      router03_host01_net:
-        ipv4_address: 192.168.5.10
-      router03_host02_net:
-        ipv4_address: 192.168.6.10
-      router01_router03_net:
-        ipv4_address: 10.10.1.2
-      router03_router04_net:
+      router1_router4_net:
         ipv4_address: 10.10.3.10
-      router03_router05_net:
+  router2_host1:
+    build: ./host
+    container_name: router2_host1
+    networks:
+      router2_host1_net:
+        ipv4_address: 192.168.3.2
+  router2_host2:
+    build: ./host
+    container_name: router2_host2
+    networks:
+      router2_host2_net:
+        ipv4_address: 192.168.4.2
+  router2:
+    build: ./router
+    container_name: router2
+    environment:
+      CONTAINER_NAME: router2
+    volumes:
+    - ./router/router.py:/app/router.py
+    cap_add:
+    - NET_ADMIN
+    networks:
+      router2_host1_net:
+        ipv4_address: 192.168.3.10
+      router2_host2_net:
+        ipv4_address: 192.168.4.10
+      router2_router3_net:
         ipv4_address: 10.10.4.10
-  router04_host01:
+  router3_host1:
     build: ./host
-    container_name: router04_host01
+    container_name: router3_host1
     networks:
-      router04_host01_net:
-        ipv4_address: 192.168.7.2
-  router04_host02:
+      router3_host1_net:
+        ipv4_address: 192.168.5.2
+  router3_host2:
     build: ./host
-    container_name: router04_host02
+    container_name: router3_host2
     networks:
-      router04_host02_net:
-        ipv4_address: 192.168.8.2
-  router04:
+      router3_host2_net:
+        ipv4_address: 192.168.6.2
+  router3:
     build: ./router
-    container_name: router04
+    container_name: router3
+    environment:
+      CONTAINER_NAME: router3
     volumes:
     - ./router/router.py:/app/router.py
     cap_add:
     - NET_ADMIN
     networks:
-      router04_host01_net:
-        ipv4_address: 192.168.7.10
-      router04_host02_net:
-        ipv4_address: 192.168.8.10
-      router03_router04_net:
-        ipv4_address: 10.10.3.2
-      router04_router05_net:
-        ipv4_address: 10.10.5.10
-  router05_host01:
-    build: ./host
-    container_name: router05_host01
-    networks:
-      router05_host01_net:
-        ipv4_address: 192.168.9.2
-  router05_host02:
-    build: ./host
-    container_name: router05_host02
-    networks:
-      router05_host02_net:
-        ipv4_address: 192.168.10.2
-  router05:
-    build: ./router
-    container_name: router05
-    volumes:
-    - ./router/router.py:/app/router.py
-    cap_add:
-    - NET_ADMIN
-    networks:
-      router05_host01_net:
-        ipv4_address: 192.168.9.10
-      router05_host02_net:
-        ipv4_address: 192.168.10.10
-      router02_router05_net:
+      router3_host1_net:
+        ipv4_address: 192.168.5.10
+      router3_host2_net:
+        ipv4_address: 192.168.6.10
+      router1_router3_net:
         ipv4_address: 10.10.2.2
-      router03_router05_net:
+      router2_router3_net:
         ipv4_address: 10.10.4.2
-      router04_router05_net:
+      router3_router5_net:
+        ipv4_address: 10.10.5.10
+  router4_host1:
+    build: ./host
+    container_name: router4_host1
+    networks:
+      router4_host1_net:
+        ipv4_address: 192.168.7.2
+  router4_host2:
+    build: ./host
+    container_name: router4_host2
+    networks:
+      router4_host2_net:
+        ipv4_address: 192.168.8.2
+  router4:
+    build: ./router
+    container_name: router4
+    environment:
+      CONTAINER_NAME: router4
+    volumes:
+    - ./router/router.py:/app/router.py
+    cap_add:
+    - NET_ADMIN
+    networks:
+      router4_host1_net:
+        ipv4_address: 192.168.7.10
+      router4_host2_net:
+        ipv4_address: 192.168.8.10
+      router1_router4_net:
+        ipv4_address: 10.10.3.2
+  router5_host1:
+    build: ./host
+    container_name: router5_host1
+    networks:
+      router5_host1_net:
+        ipv4_address: 192.168.9.2
+  router5_host2:
+    build: ./host
+    container_name: router5_host2
+    networks:
+      router5_host2_net:
+        ipv4_address: 192.168.10.2
+  router5:
+    build: ./router
+    container_name: router5
+    environment:
+      CONTAINER_NAME: router5
+    volumes:
+    - ./router/router.py:/app/router.py
+    cap_add:
+    - NET_ADMIN
+    networks:
+      router5_host1_net:
+        ipv4_address: 192.168.9.10
+      router5_host2_net:
+        ipv4_address: 192.168.10.10
+      router1_router5_net:
+        ipv4_address: 10.10.1.2
+      router3_router5_net:
         ipv4_address: 10.10.5.2
 networks:
-  router01_host01_net:
+  router1_host1_net:
     driver: bridge
     ipam:
       config:
       - subnet: 192.168.1.0/24
-  router01_host02_net:
+  router1_host2_net:
     driver: bridge
     ipam:
       config:
       - subnet: 192.168.2.0/24
-  router02_host01_net:
+  router2_host1_net:
     driver: bridge
     ipam:
       config:
       - subnet: 192.168.3.0/24
-  router02_host02_net:
+  router2_host2_net:
     driver: bridge
     ipam:
       config:
       - subnet: 192.168.4.0/24
-  router03_host01_net:
+  router3_host1_net:
     driver: bridge
     ipam:
       config:
       - subnet: 192.168.5.0/24
-  router03_host02_net:
+  router3_host2_net:
     driver: bridge
     ipam:
       config:
       - subnet: 192.168.6.0/24
-  router04_host01_net:
+  router4_host1_net:
     driver: bridge
     ipam:
       config:
       - subnet: 192.168.7.0/24
-  router04_host02_net:
+  router4_host2_net:
     driver: bridge
     ipam:
       config:
       - subnet: 192.168.8.0/24
-  router05_host01_net:
+  router5_host1_net:
     driver: bridge
     ipam:
       config:
       - subnet: 192.168.9.0/24
-  router05_host02_net:
+  router5_host2_net:
     driver: bridge
     ipam:
       config:
       - subnet: 192.168.10.0/24
-  router01_router03_net:
+  router1_router5_net:
     driver: bridge
     ipam:
       config:
       - subnet: 10.10.1.0/24
-  router02_router05_net:
+  router1_router3_net:
     driver: bridge
     ipam:
       config:
       - subnet: 10.10.2.0/24
-  router03_router04_net:
+  router1_router4_net:
     driver: bridge
     ipam:
       config:
       - subnet: 10.10.3.0/24
-  router03_router05_net:
+  router2_router3_net:
     driver: bridge
     ipam:
       config:
       - subnet: 10.10.4.0/24
-  router04_router05_net:
+  router3_router5_net:
     driver: bridge
     ipam:
       config:

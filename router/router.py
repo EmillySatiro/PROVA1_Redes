@@ -4,23 +4,20 @@ import threading
 import json
 import subprocess
 import psutil
+import os
 
 class EstadoRoteador:
     __slots__ = ["_tabela_roteamento", "_id_rota", "_dados_vizinhos", "_roteamento"]
 
     def __init__(self, id_rota: str, dados_vizinhos: dict[str, str]):
-        """
-        🚀 Inicializa o roteador com ID e vizinhos.
-        """
+     
         self._id_rota = id_rota
         self._tabela_roteamento = {}
         self._dados_vizinhos = dados_vizinhos
         self._roteamento = {}
 
     def _criar_entrada_tabela(self, numero_seq, timestamp, enderecos, links):
-        """
-        🧩 Cria uma entrada na tabela de roteamento.
-        """
+       
         return {
             "numero_sequencia": numero_seq,
             "timestamp": timestamp,
@@ -45,7 +42,8 @@ class EstadoRoteador:
 
         for vizinho in pacote["links"]:
             if vizinho not in self._tabela_roteamento:
-                print(f"🆕 Novo roteador descoberto: {vizinho}")
+                print(f"Novo roteador descoberto: {vizinho}")
+            
                 self._tabela_roteamento[vizinho] = self._criar_entrada_tabela(-1, 0, [], {})
 
         rotas = self._calcular_rotas_minimas()
@@ -54,9 +52,7 @@ class EstadoRoteador:
         return True
 
     def _calcular_rotas_minimas(self):
-        """
-        🗺️ Usa Dijkstra para calcular rotas mínimas.
-        """
+# usar os pesos do csv para calcular o caminho mias curto  lembrar fazer 
         distancias = {r: float('inf') for r in self._tabela_roteamento}
         caminhos = {r: None for r in self._tabela_roteamento}
         visitados = {}
@@ -79,11 +75,10 @@ class EstadoRoteador:
                         caminhos[vizinho] = roteador
 
         return caminhos
+    
 
     def _atualizar_roteamento(self, caminhos: dict):
-        """
-        🔄 Atualiza as rotas com base no melhor caminho.
-        """
+      
         self._roteamento.clear()
         for destino, gateway in caminhos.items():
             if destino != self._id_rota:
@@ -95,9 +90,7 @@ class EstadoRoteador:
         self._roteamento = dict(sorted(self._roteamento.items()))
 
     def _aplicar_rotas(self):
-        """
-        📡 Aplica as rotas calculadas no sistema operacional.
-        """
+      
         for destino, gateway in self._roteamento.items():
             if destino != self._id_rota:
                 if gateway not in self._dados_vizinhos:
@@ -113,6 +106,23 @@ class EstadoRoteador:
                         print(f"✅ Rota aplicada: {ip_destino} -> {ip_gateway}")
                     except subprocess.CalledProcessError as e:
                         print(f"❌ Erro ao aplicar rota: {comando} -> {e}")
+                        
+def obter_interfaces_com_broadcast():
+  
+    interfaces = []
+    for nome, snics in psutil.net_if_addrs().items():
+        for snic in snics:
+            if snic.family == socket.AF_INET:
+                ip = snic.address
+                broadcast = snic.broadcast
+                if ip and broadcast:
+                    interfaces.append({
+                        "interface": nome,
+                        "address": ip,
+                        "broadcast": broadcast
+                    })
+    return interfaces
+
 class EmissorPacoteHello:
     __slots__ = ["_id_rota", "_interfaces", "_vizinhos", "_intervalo_envio", "_porta_comunicacao"]
 
@@ -150,28 +160,6 @@ class EmissorPacoteHello:
             "ip_address": ip_address,
             "vizinhos_conhecidos": list(self._vizinhos.keys()),
         }
-    
-
-  
-
-    def obter_interfaces_com_broadcast():
-        """
-        🧼 Retorna uma lista de dicionários contendo nome da interface, endereço IP e broadcast.
-        Usa psutil para maior compatibilidade com sistemas diferentes.
-        """
-        interfaces = []
-        for nome, snics in psutil.net_if_addrs().items():
-            for snic in snics:
-                if snic.family == socket.AF_INET:
-                    ip = snic.address
-                    broadcast = snic.broadcast
-                    if ip and broadcast:
-                        interfaces.append({
-                            "interface": nome,
-                            "address": ip,
-                            "broadcast": broadcast
-                        })
-        return interfaces
 
     def _enviar_broadcast(self, ip_address: str, broadcast_ip: str):
         """
@@ -207,23 +195,11 @@ class EmissorPacoteHello:
                 thread = threading.Thread(target=self._enviar_broadcast, args=(ip, broadcast), daemon=True)
                 thread.start()
 
-
 class EmissorPacoteLSA:
     __slots__ = ["_id_rota", "_vizinhos_ip", "_vizinhos_custo", "_intervalo_envio", "_porta_comunicacao", "_numero_sequencia", "_iniciado", "_lsdb", "_interfaces"]
 
     def __init__(self, id_rota: str, vizinhos_ip: dict[str, str], vizinhos_custo: dict[str, int], interfaces: list[dict[str, str]], lsdb: EstadoRoteador, intervalo_envio: int = 30, porta_comunicacao: int = 5000):
-        """
-        Inicializa o emissor de pacotes LSA, configurando os vizinhos e os parâmetros de envio.
-        
-        Parâmetros:
-        id_rota (str): Identificador do roteador.
-        vizinhos_ip (dict[str, str]): Dicionário contendo os IPs dos vizinhos.
-        vizinhos_custo (dict[str, int]): Dicionário contendo os custos para os vizinhos.
-        interfaces (list[dict[str, str]]): Lista com informações das interfaces de rede.
-        lsdb (EstadoRoteador): Instância da classe EstadoRoteador para atualizar a tabela de roteamento.
-        intervalo_envio (int, opcional): Intervalo entre os envios de pacotes (em segundos). Padrão é 30.
-        porta_comunicacao (int, opcional): Porta utilizada para comunicação dos pacotes. Padrão é 5000.
-        """
+      
         self._id_rota = id_rota
         self._vizinhos_ip = vizinhos_ip
         self._vizinhos_custo = vizinhos_custo
@@ -259,8 +235,8 @@ class EmissorPacoteLSA:
         while True:
             pacote = self._gerar_pacote_lsa()
             mensagem = json.dumps(pacote).encode("utf-8")
+            self._lsdb.atualizar_tabela(pacote)
             
-            # Envia pacotes para cada vizinho
             for ip_vizinho in self._vizinhos_ip.values():
                 try:
                     sock.sendto(mensagem, (ip_vizinho, self._porta_comunicacao))
@@ -269,7 +245,7 @@ class EmissorPacoteLSA:
                     print(f"[{self._id_rota}] Erro ao enviar LSA: {e}")
 
             time.sleep(self._intervalo_envio)
-
+    
     def iniciar_emissao(self):
         """
         Inicia o envio de pacotes LSA para os vizinhos. O processo é feito em uma thread separada.
@@ -278,3 +254,91 @@ class EmissorPacoteLSA:
             thread = threading.Thread(target=self._enviar_para_vizinhos, daemon=True)
             thread.start()
             self._iniciado = True
+
+class Roteador:
+    """
+    Classe que gerencia a operação do roteador, incluindo a comunicação com os vizinhos,
+    manutenção da tabela de roteamento e envio de pacotes HELLO e LSA.
+    """
+
+    def __init__(self, router_id: str, porta_comunicacao: int = 5000, intervalo_envio: int = 10):
+        self._router_id = router_id
+        self._porta_comunicacao = porta_comunicacao
+        self._intervalo_envio = intervalo_envio
+        self._interfaces = self.obter_interfaces_com_broadcast()
+        self._vizinhos = {}
+        self._estado_roteador = EstadoRoteador(router_id, self._vizinhos)
+        
+        # Criando os emissores
+        self._emissor_hello = EmissorPacoteHello(router_id, self._interfaces, self._vizinhos, intervalo_envio, porta_comunicacao)
+        self._emissor_lsa = EmissorPacoteLSA(router_id, self._vizinhos, {}, self._interfaces, self._estado_roteador, intervalo_envio, porta_comunicacao)
+
+    def obter_interfaces_com_broadcast(self):
+        interfaces = []
+        for nome, snics in psutil.net_if_addrs().items():
+            for snic in snics:
+                if snic.family == socket.AF_INET:
+                    ip = snic.address
+                    broadcast = snic.broadcast
+                    if ip and broadcast:
+                        interfaces.append({
+                            "interface": nome,
+                            "address": ip,
+                            "broadcast": broadcast
+                        })
+        return interfaces
+
+    def iniciar_comunicacao(self):
+        # Inicializa o envio de pacotes HELLO e LSA em threads separadas
+        threading.Thread(target=self._emissor_hello.iniciar_emissao, daemon=True).start()
+        threading.Thread(target=self._emissor_lsa.iniciar_emissao, daemon=True).start()
+
+    def processar_pacote(self, pacote):
+        """
+        Processa um pacote recebido de um vizinho. Isso pode incluir pacotes HELLO e LSA.
+        """
+        tipo_pacote = pacote.get("tipo")
+        
+        if tipo_pacote == "HELLO":
+            print(f"[{self._router_id}] Recebido pacote HELLO de {pacote['id_rota']}")
+            # Adiciona o vizinho à lista de vizinhos conhecidos
+            self._vizinhos[pacote["id_rota"]] = pacote["ip_address"]
+        elif tipo_pacote == "LSA":
+            print(f"[{self._router_id}] Recebido pacote LSA de {pacote['id_rota']}")
+            # Atualiza a tabela de roteamento com o LSA recebido
+            self._estado_roteador.atualizar_tabela(pacote)
+
+    def receber_pacotes(self):
+        """
+        Método responsável por ouvir pacotes na rede e processá-los.
+        """
+        sock = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
+        sock.bind(("", self._porta_comunicacao))
+
+        while True:
+            try:
+                data, address = sock.recvfrom(4096)
+                pacote = json.loads(data.decode("utf-8"))
+                self.processar_pacote(pacote)
+            except Exception as e:
+                print(f"[{self._router_id}] Erro ao processar pacote: {e}")
+
+    def iniciar(self):
+        # Inicia a comunicação com os vizinhos e começa a ouvir pacotes
+        threading.Thread(target=self.receber_pacotes, daemon=True).start()
+        self.iniciar_comunicacao()
+
+        while True:
+            time.sleep(1)
+
+
+# Exemplo de uso
+if __name__ == "__main__":
+    router_id = os.getenv("CONTAINER_NAME")
+    if (not router_id): 
+        raise ValueError(
+            "NÃO ACHOU O NOME DO CONTAINER AHAHHAHAHAHAHA"
+        )
+    roteador = Roteador(router_id)
+    roteador.iniciar()
+
