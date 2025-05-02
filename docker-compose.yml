@@ -24,10 +24,8 @@ services:
         ipv4_address: 192.168.1.10
       router01_host02_net:
         ipv4_address: 192.168.2.10
-      router01_router05_net:
+      router01_router03_net:
         ipv4_address: 10.10.1.10
-      router01_router04_net:
-        ipv4_address: 10.10.2.10
   router02_host01:
     build: ./host
     container_name: router02_host01
@@ -53,7 +51,7 @@ services:
       router02_host02_net:
         ipv4_address: 192.168.4.10
       router02_router05_net:
-        ipv4_address: 10.10.3.10
+        ipv4_address: 10.10.2.10
   router03_host01:
     build: ./host
     container_name: router03_host01
@@ -78,6 +76,10 @@ services:
         ipv4_address: 192.168.5.10
       router03_host02_net:
         ipv4_address: 192.168.6.10
+      router01_router03_net:
+        ipv4_address: 10.10.1.2
+      router03_router04_net:
+        ipv4_address: 10.10.3.10
       router03_router05_net:
         ipv4_address: 10.10.4.10
   router04_host01:
@@ -104,8 +106,8 @@ services:
         ipv4_address: 192.168.7.10
       router04_host02_net:
         ipv4_address: 192.168.8.10
-      router01_router04_net:
-        ipv4_address: 10.10.2.2
+      router03_router04_net:
+        ipv4_address: 10.10.3.2
       router04_router05_net:
         ipv4_address: 10.10.5.10
   router05_host01:
@@ -132,10 +134,8 @@ services:
         ipv4_address: 192.168.9.10
       router05_host02_net:
         ipv4_address: 192.168.10.10
-      router01_router05_net:
-        ipv4_address: 10.10.1.2
       router02_router05_net:
-        ipv4_address: 10.10.3.2
+        ipv4_address: 10.10.2.2
       router03_router05_net:
         ipv4_address: 10.10.4.2
       router04_router05_net:
@@ -191,17 +191,17 @@ networks:
     ipam:
       config:
       - subnet: 192.168.10.0/24
-  router01_router05_net:
+  router01_router03_net:
     driver: bridge
     ipam:
       config:
       - subnet: 10.10.1.0/24
-  router01_router04_net:
+  router02_router05_net:
     driver: bridge
     ipam:
       config:
       - subnet: 10.10.2.0/24
-  router02_router05_net:
+  router03_router04_net:
     driver: bridge
     ipam:
       config:

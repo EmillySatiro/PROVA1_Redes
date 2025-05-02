@@ -9,8 +9,8 @@ router04_host01,router04,-
 router04_host02,router04,-
 router05_host01,router05,-
 router05_host02,router05,-
-router01,router05,1
-router01,router04,5
-router02,router05,8
-router03,router05,2
-router04,router05,6
+router01,router03,1
+router02,router05,4
+router03,router04,2
+router03,router05,6
+router04,router05,2

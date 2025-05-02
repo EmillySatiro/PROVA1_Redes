@@ -10,4 +10,4 @@ COPY conexoes_rede.csv .
 RUN pip install --no-cache-dir networkx
 
 # Comando padrão ao iniciar o container
-CMD ["python", "router.py"]
+CMD ["python","-u", "router.py"]
