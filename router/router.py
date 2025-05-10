@@ -5,6 +5,23 @@ import json
 import subprocess
 import psutil
 import os
+import networkx as nx
+import csv
+
+def carregar_grafo_com_pesos(csv_path):
+    G = nx.Graph()
+    with open(csv_path, newline='') as csvfile:
+        leitor = csv.DictReader(csvfile)
+        for linha in leitor:
+            origem = linha['Origem']
+            destino = linha['Destino']
+            custo = linha['Custo']
+            if custo != '-':
+                G.add_edge(origem, destino, weight=int(custo))
+            else:
+                G.add_edge(origem, destino, weight=1)  # Para conexões host-roteador
+    print(f"Grafo carregado: {G.edges(data=True)}")
+    return G
 
 class EstadoRoteador:
     __slots__ = ["_tabela_roteamento", "_id_rota", "_dados_vizinhos", "_roteamento"]
@@ -31,11 +48,15 @@ class EstadoRoteador:
         """
         id_rota = pacote["id_rota"]
         numero_seq = pacote["numero_sequencia"]
-
+        
+        print(f"Pacote recebido: {pacote}")
+        
         entrada = self._tabela_roteamento.get(id_rota)
         if entrada and numero_seq <= entrada["numero_sequencia"]:
+            print(f"Pacote ignorado (sequência antiga): {pacote}")
             return False
 
+        print(f"Atualizando tabela de roteamento com id_rota {id_rota} e seq {numero_seq}")
         self._tabela_roteamento[id_rota] = self._criar_entrada_tabela(
             numero_seq, pacote["timestamp"], pacote["enderecos"], pacote["links"]
         )
@@ -43,7 +64,6 @@ class EstadoRoteador:
         for vizinho in pacote["links"]:
             if vizinho not in self._tabela_roteamento:
                 print(f"Novo roteador descoberto: {vizinho}")
-            
                 self._tabela_roteamento[vizinho] = self._criar_entrada_tabela(-1, 0, [], {})
 
         rotas = self._calcular_rotas_minimas()
@@ -51,31 +71,45 @@ class EstadoRoteador:
         self._aplicar_rotas()
         return True
 
+
     def _calcular_rotas_minimas(self):
-# usar os pesos do csv para calcular o caminho mias curto  lembrar fazer 
         distancias = {r: float('inf') for r in self._tabela_roteamento}
         caminhos = {r: None for r in self._tabela_roteamento}
-        visitados = {}
+        visitados = {r: False for r in self._tabela_roteamento}
 
         distancias[self._id_rota] = 0
 
-        while len(visitados) < len(self._tabela_roteamento):
-            roteador = min((n for n in distancias if n not in visitados), key=distancias.get, default=None)
-            if roteador is None:
+        for _ in range(len(self._tabela_roteamento)):
+            u = min((r for r in self._tabela_roteamento if not visitados[r]), 
+                    key=lambda r: distancias[r], default=None)
+
+            if u is None or distancias[u] == float('inf'):
                 break
 
-            visitados[roteador] = True
-            vizinhos = self._tabela_roteamento[roteador]["links"]
+            visitados[u] = True
 
-            for vizinho, custo in vizinhos.items():
-                if vizinho not in visitados:
-                    nova_distancia = distancias[roteador] + custo
+            for vizinho in self._tabela_roteamento[u]["links"]:
+                par = frozenset((u, vizinho))
+                peso = self._pesos_enlaces.get(par, 1)  # peso real, ou 1 se não encontrado
+
+                if not visitados[vizinho]:
+                    nova_distancia = distancias[u] + peso
                     if nova_distancia < distancias[vizinho]:
                         distancias[vizinho] = nova_distancia
-                        caminhos[vizinho] = roteador
+                        caminhos[vizinho] = u
 
-        return caminhos
-    
+        # Reconstrói as rotas mínimas como dicionário: destino -> próximo salto
+        rotas = {}
+        for destino in self._tabela_roteamento:
+            if destino == self._id_rota or distancias[destino] == float('inf'):
+                continue
+
+            anterior = destino
+            while caminhos[anterior] != self._id_rota:
+                anterior = caminhos[anterior]
+            rotas[destino] = anterior
+
+        return rotas
 
     def _atualizar_roteamento(self, caminhos: dict):
       
@@ -90,7 +124,6 @@ class EstadoRoteador:
         self._roteamento = dict(sorted(self._roteamento.items()))
 
     def _aplicar_rotas(self):
-      
         for destino, gateway in self._roteamento.items():
             if destino != self._id_rota:
                 if gateway not in self._dados_vizinhos:
@@ -106,7 +139,7 @@ class EstadoRoteador:
                         print(f"✅ Rota aplicada: {ip_destino} -> {ip_gateway}")
                     except subprocess.CalledProcessError as e:
                         print(f"❌ Erro ao aplicar rota: {comando} -> {e}")
-                        
+ 
 def obter_interfaces_com_broadcast():
   
     interfaces = []
@@ -298,10 +331,9 @@ class Roteador:
         Processa um pacote recebido de um vizinho. Isso pode incluir pacotes HELLO e LSA.
         """
         tipo_pacote = pacote.get("tipo")
-        
         if tipo_pacote == "HELLO":
             print(f"[{self._router_id}] Recebido pacote HELLO de {pacote['id_rota']}")
-            # Adiciona o vizinho à lista de vizinhos conhecidos
+
             self._vizinhos[pacote["id_rota"]] = pacote["ip_address"]
         elif tipo_pacote == "LSA":
             print(f"[{self._router_id}] Recebido pacote LSA de {pacote['id_rota']}")
