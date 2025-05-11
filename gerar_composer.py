@@ -5,10 +5,10 @@ import matplotlib.pyplot as plt
 import csv
 
 # CONFIGURAÇÕES
-num_roteadores = 5
+num_roteadores = 15
 hosts_por_roteador = 2
 
-# Gerar grafo conectado com pesos
+# Gerar grafo conectado com pesos'
 grafo = nx.connected_watts_strogatz_graph(num_roteadores, k=2, p=0.7)
 for (u, v) in grafo.edges():
     grafo.edges[u, v]['weight'] = random.randint(1, 10)
