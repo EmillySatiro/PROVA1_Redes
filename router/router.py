@@ -237,8 +237,7 @@ class EmissorPacoteLSA:
     __slots__ = ["_id_rota", "_vizinhos_ip", "_vizinhos_custo", "_intervalo_envio",
                  "_porta_comunicacao", "_numero_sequencia", "_iniciado", "_lsdb", "_interfaces"]
 
-    def __init__(self, id_rota: str, vizinhos_ip: dict[str, str], vizinhos_custo: dict[str, int], interfaces: list[dict[str, str]], lsdb: EstadoRoteador, intervalo_envio: int = 30, porta_comunicacao: int = 5000):
-
+    def __init__(self, id_rota: str, vizinhos_ip: dict[str, str], vizinhos_custo: dict[str, int],interfaces: list[dict[str, str]], lsdb: EstadoRoteador, intervalo_envio: int = 30, porta_comunicacao: int = 5000):
         self._id_rota = id_rota
         self._vizinhos_ip = vizinhos_ip
         self._vizinhos_custo = vizinhos_custo
@@ -249,72 +248,72 @@ class EmissorPacoteLSA:
         self._lsdb = lsdb
         self._interfaces = interfaces
 
+    def _enviar_para_vizinhos(self):
+            """
+            Envia pacotes LSA periodicamente para TODOS os vizinhos.
+            Diferente do encaminhar_vizinhos() que evita o remetente original.
+            """
+            while True:
+                try:
+                    # 1. Gera novo pacote LSA
+                    pacote = self._gerar_pacote_lsa()
+                    mensagem = json.dumps(pacote).encode("utf-8")
+                    
+                    # 2. Atualiza a própria tabela primeiro
+                    self._lsdb.atualizar_tabela(pacote)
+                    
+                    # 3. Envia para todos os vizinhos
+                    for vizinho_id, ip_vizinho in self._vizinhos_ip.items():
+                        try:
+                            with socket.socket(socket.AF_INET, socket.SOCK_DGRAM) as sock:
+                                sock.sendto(mensagem, (ip_vizinho, self._porta_comunicacao))
+                                print(f"[LSA] Enviado para {vizinho_id} ({ip_vizinho})")
+                        except Exception as e:
+                            print(f"Erro ao enviar LSA para {vizinho_id}: {e}")
+                    
+                    # 4. Aguarda o intervalo
+                    time.sleep(self._intervalo_envio)
+                    
+                except Exception as e:
+                    print(f"Erro grave no envio periódico de LSA: {e}")
+                    time.sleep(5)  # Espera antes de tentar novamente
+
+    def encaminhar_vizinhos(self, pacote, ip_remetente):
+        """Encaminha o LSA para todos os vizinhos exceto o remetente original."""
+        sock = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
+        mensagem = json.dumps(pacote).encode("utf-8")
+        
+        for vizinho_id, ip_vizinho in self._vizinhos_ip.items():
+            if ip_vizinho != ip_remetente:
+                try:
+                    sock.sendto(mensagem, (ip_vizinho, self._porta_comunicacao))
+                    print(f"[{self._id_rota}] LSA encaminhado para {vizinho_id} ({ip_vizinho})")
+                except Exception as e:
+                    print(f"[{self._id_rota}] Erro ao encaminhar para {vizinho_id}: {e}")
+
     def _gerar_pacote_lsa(self):
-        """
-        Gera um pacote LSA com o IP do roteador.
-        """
+        """Gera um novo LSA com informações atualizadas."""
         self._numero_sequencia += 1
+        
         pacote = {
             "tipo": "LSA",
             "id_rota": self._id_rota,
+            "ip_address": self._interfaces[0]["address"] if self._interfaces else "0.0.0.0",
             "timestamp": time.time(),
-            "enderecos": [item["address"] for item in self._interfaces],
             "numero_sequencia": self._numero_sequencia,
-            "links": self._vizinhos_custo.copy(),
-            "ip_address": self._interfaces[0]["address"] if self._interfaces else None
+            "enderecos": [item["address"] for item in self._interfaces],
+            "links": self._vizinhos_custo.copy()
         }
+    
+        print(f"[{self._id_rota}] Gerado LSA (seq {self._numero_sequencia}): {pacote}")
         return pacote
 
-    def _enviar_para_vizinhos(self):
-        """
-        Envia pacotes LSA periodicamente para os vizinhos configurados.
-        """
-        sock = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
-        while True:
-            pacote = self._gerar_pacote_lsa()
-            mensagem = json.dumps(pacote).encode("utf-8")
-            self._lsdb.atualizar_tabela(pacote)
-
-            for ip_vizinho in self._vizinhos_ip.values():
-                try:
-                    sock.sendto(
-                        mensagem, (ip_vizinho, self._porta_comunicacao))
-                    print(
-                        f"[{self._id_rota}] Pacote LSA enviado para {ip_vizinho}")
-                except Exception as e:
-                    print(f"[{self._id_rota}] Erro ao enviar LSA: {e}")
-
-            time.sleep(self._intervalo_envio)
-            
-    def encaminhar_vizinhos(self, pacote, ip_vizinho):
-        """
-        Encaminha o pacote LSA para os vizinhos, exceto para o vizinho que enviou o pacote.
-
-        Parâmetros:
-        pacote (dict): Pacote LSA a ser encaminhado.
-        ip_vizinho (str): ip do roteador emissor do pacote
-        """
-        sock = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
-        mensagem = json.dumps(pacote).encode("utf-8")
-        # Cria uma lista de tuplas (ID, IP) com os vizinhos que receberão o pacote
-        vizinhos_lista = [(id_rota, ip) for id_rota, ip in self._vizinhos_ip.items() if ip != ip_vizinho]
-
-        for id_rota, ip in vizinhos_lista:
-            try:
-                sock.sendto(mensagem, (ip, self._porta_comunicacao))
-                print(f"[{self._id_rota}] Pacote LSA encaminhado para {ip}")
-            except Exception as e:
-                print(f"[{self._id_rota}] Erro ao encaminhar LSA: {e}")
-
     def iniciar_emissao(self):
-        """
-        Inicia o envio de pacotes LSA para os vizinhos. O processo é feito em uma thread separada.
-        """
+        """Inicia o envio periódico de LSAs em thread separada."""
         if not self._iniciado:
-            thread = threading.Thread(
-                target=self._enviar_para_vizinhos, daemon=True)
-            thread.start()
+            threading.Thread(target=self._enviar_para_vizinhos, daemon=True).start()
             self._iniciado = True
+            print("Emissor LSA iniciado!")
 
 
 class Roteador:
@@ -360,31 +359,59 @@ class Roteador:
             target=self._emissor_lsa.iniciar_emissao, daemon=True).start()
 
     def processar_pacote(self, pacote):
-        """
-        Processa um pacote recebido de um vizinho (HELLO ou LSA).
-        """
         tipo_pacote = pacote.get("tipo")
+        
         if tipo_pacote == "HELLO":
-            id_emissor = pacote["id_rota"]
-            if id_emissor != self._router_id:
-                self._vizinhos[id_emissor] = self._grafo.get_edge_data(id_emissor, self._router_id)['weight']
-                print(f"[{self._router_id}] Recebido HELLO de {pacote['id_rota']}")
-                # Salva o IP do vizinho
-                if "ip_address" in pacote:
-                    self._vizinhos_reconhecidos[id_emissor] = pacote["ip_address"]
-                    
+            self._processar_hello(pacote)
         elif tipo_pacote == "LSA":
+            self._processar_lsa(pacote)
+    def _processar_hello(self, pacote):
+        """Processa pacotes HELLO recebidos."""
+        try:
             id_emissor = pacote["id_rota"]
-            print(f"[{self._router_id}] Recebido LSA de {id_emissor}")
+            if id_emissor != self._router_id:  # Ignora pacotes do próprio roteador
+                print(f"[{self._router_id}] Recebido HELLO de {id_emissor}")
+                
+                # Verifica se é um vizinho conhecido no grafo
+                if self._grafo.has_edge(id_emissor, self._router_id):
+                    custo = self._grafo[id_emissor][self._router_id]["weight"]
+                    self._vizinhos[id_emissor] = custo
+                    
+                    # Registra o IP do vizinho se estiver no pacote
+                    if "ip_address" in pacote:
+                        self._vizinhos_reconhecidos[id_emissor] = pacote["ip_address"]
+                        print(f"[{self._router_id}] Registrado vizinho {id_emissor} - IP: {pacote['ip_address']}, Custo: {custo}")
+        except Exception as e:
+            print(f"[{self._router_id}] Erro ao processar HELLO: {e}")
+            traceback.print_exc()
             
-            # Atualiza a tabela de roteamento
-            if self._estado_roteador.atualizar_tabela(pacote):
-                # Encaminha apenas se conhecemos o IP do vizinho
-                if id_emissor in self._vizinhos_reconhecidos:
-                    ip_vizinho = self._vizinhos_reconhecidos[id_emissor]
-                    self._emissor_lsa.encaminhar_vizinhos(pacote, ip_vizinho)
-                else:
-                    print(f"[{self._router_id}] Vizinho {id_emissor} desconhecido - não encaminhado")
+    def _processar_lsa(self, pacote):
+        id_emissor = pacote["id_rota"]
+        
+        # Ignora pacotes do próprio roteador
+        if id_emissor == self._router_id:
+            return
+        
+        print(f"[{self._router_id}] Recebido LSA de {id_emissor} (seq: {pacote['numero_sequencia']})")
+        
+        # Verifica se o pacote é novo
+        entrada_atual = self._estado_roteador._tabela_roteamento.get(id_emissor, {})
+        seq_atual = entrada_atual.get("numero_sequencia", -1)
+        seq_recebido = pacote["numero_sequencia"]
+        
+        if seq_recebido > seq_atual:
+            print(f"[{self._router_id}] Atualizando tabela com LSA de {id_emissor}")
+            self._estado_roteador.atualizar_tabela(pacote)
+            
+            # Encaminha para todos os vizinhos EXCETO quem enviou
+            ip_remetente = pacote.get("ip_address")
+            if ip_remetente:
+                print(f"[{self._router_id}] Encaminhando LSA para outros vizinhos")
+                self._emissor_lsa.encaminhar_vizinhos(pacote, ip_remetente)
+            else:
+                print(f"[{self._router_id}] LSA sem IP remetente, não encaminhado")
+        else:
+            print(f"[{self._router_id}] LSA antigo ignorado (seq {seq_recebido} <= {seq_atual})")
 
     def receber_pacotes(self):
         """
