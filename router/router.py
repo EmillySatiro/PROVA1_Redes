@@ -60,19 +60,19 @@ class EstadoRoteador:
             print(f"Pacote ignorado (sequência antiga): {pacote}")
             return False
 
-        print(
-            f"Atualizando tabela de roteamento com id_rota {id_rota} e seq {numero_seq}")
+        print(f"Atualizando tabela de roteamento com id_rota {id_rota} e seq {numero_seq}")
         self._tabela_roteamento[id_rota] = self._criar_entrada_tabela(
             numero_seq, pacote["timestamp"], pacote["enderecos"], pacote["links"]
         )
 
-        for vizinho in pacote["links"]:
+        for vizinho in pacote["links"].keys():
             if vizinho not in self._tabela_roteamento:
                 print(f"Novo roteador descoberto: {vizinho}")
-                self._tabela_roteamento[vizinho] = self._criar_entrada_tabela(-1, 0, [
-                ], {})
+                self._tabela_roteamento[vizinho] = self._criar_entrada_tabela(-1, 0, [], {})
 
+        # CHAMADA DO ALGORITMO DE DIJKSTRA MANUAL
         rotas = self._calcular_rotas_minimas()
+        
         self._atualizar_roteamento(rotas)
         self._aplicar_rotas()
         return True
@@ -121,26 +121,24 @@ class EstadoRoteador:
         self._roteamento = dict(sorted(self._roteamento.items()))
 
     def _aplicar_rotas(self):
-        print(self._roteamento)
+        print("Tabela de roteamento atual:")
+        for destino, dados in self._tabela_roteamento.items():
+            print(f"  {destino}: {dados}")
+        
+        print("\nRotas calculadas:")
         for destino, gateway in self._roteamento.items():
-
-            if destino != self._id_rota:
-                if gateway not in self._dados_vizinhos:
-                    print(
-                        f"⚠️ Rota ignorada para {destino} via {gateway}: gateway desconhecido.")
-                    continue
-
+            print(f"  {destino} -> {gateway}")
+            
+            if gateway in self._dados_vizinhos:
+                ip_gateway = self._dados_vizinhos[gateway]
                 for ip_destino in self._tabela_roteamento[destino]["enderecos"]:
-                    ip_gateway = self._dados_vizinhos[gateway]
-                    comando = ["ip", "route", "replace",
-                               ip_destino, "via", ip_gateway]
-
+                    print(f"  Aplicando rota: {ip_destino} via {ip_gateway}")
+                    comando = ["ip", "route", "replace", ip_destino, "via", ip_gateway]
                     try:
                         subprocess.run(comando, check=True)
-                        print(f"✅ Rota aplicada: {ip_destino} -> {ip_gateway}")
+                        print("    ✅ Sucesso")
                     except subprocess.CalledProcessError as e:
-                        print(f"❌ Erro ao aplicar rota: {comando} -> {e}")
-
+                        print(f"    ❌ Falha: {e}")
 
 def obter_interfaces_com_broadcast():
 
@@ -253,20 +251,19 @@ class EmissorPacoteLSA:
 
     def _gerar_pacote_lsa(self):
         """
-        Gera um pacote LSA (Link State Advertisement) para ser enviado aos vizinhos.
-
-        Retorna:
-        dict: Pacote LSA com informações sobre o estado do roteador.
+        Gera um pacote LSA com o IP do roteador.
         """
         self._numero_sequencia += 1
-        return {
+        pacote = {
             "tipo": "LSA",
             "id_rota": self._id_rota,
             "timestamp": time.time(),
             "enderecos": [item["address"] for item in self._interfaces],
             "numero_sequencia": self._numero_sequencia,
-            "links": self._vizinhos_custo.copy()
+            "links": self._vizinhos_custo.copy(),
+            "ip_address": self._interfaces[0]["address"] if self._interfaces else None
         }
+        return pacote
 
     def _enviar_para_vizinhos(self):
         """
@@ -288,6 +285,26 @@ class EmissorPacoteLSA:
                     print(f"[{self._id_rota}] Erro ao enviar LSA: {e}")
 
             time.sleep(self._intervalo_envio)
+            
+    def encaminhar_vizinhos(self, pacote, ip_vizinho):
+        """
+        Encaminha o pacote LSA para os vizinhos, exceto para o vizinho que enviou o pacote.
+
+        Parâmetros:
+        pacote (dict): Pacote LSA a ser encaminhado.
+        ip_vizinho (str): ip do roteador emissor do pacote
+        """
+        sock = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
+        mensagem = json.dumps(pacote).encode("utf-8")
+        # Cria uma lista de tuplas (ID, IP) com os vizinhos que receberão o pacote
+        vizinhos_lista = [(id_rota, ip) for id_rota, ip in self._vizinhos_ip.items() if ip != ip_vizinho]
+
+        for id_rota, ip in vizinhos_lista:
+            try:
+                sock.sendto(mensagem, (ip, self._porta_comunicacao))
+                print(f"[{self._id_rota}] Pacote LSA encaminhado para {ip}")
+            except Exception as e:
+                print(f"[{self._id_rota}] Erro ao encaminhar LSA: {e}")
 
     def iniciar_emissao(self):
         """
@@ -344,20 +361,30 @@ class Roteador:
 
     def processar_pacote(self, pacote):
         """
-        Processa um pacote recebido de um vizinho. Isso pode incluir pacotes HELLO e LSA.
+        Processa um pacote recebido de um vizinho (HELLO ou LSA).
         """
         tipo_pacote = pacote.get("tipo")
         if tipo_pacote == "HELLO":
             id_emissor = pacote["id_rota"]
             if id_emissor != self._router_id:
                 self._vizinhos[id_emissor] = self._grafo.get_edge_data(id_emissor, self._router_id)['weight']
-                print(f"[{self._router_id}] Recebido pacote HELLO de {pacote['id_rota']}")
-                self._vizinhos_reconhecidos[id_emissor] = pacote["ip_address"]
+                print(f"[{self._router_id}] Recebido HELLO de {pacote['id_rota']}")
+                # Salva o IP do vizinho
+                if "ip_address" in pacote:
+                    self._vizinhos_reconhecidos[id_emissor] = pacote["ip_address"]
+                    
         elif tipo_pacote == "LSA":
-            print(f"[{self._router_id}] Recebido pacote LSA de {pacote['id_rota']}")
-            # Atualiza a tabela de roteamento com o LSA recebido
-            self._estado_roteador.atualizar_tabela(pacote)
-            # criar uma função para encaminhar para todos os vizinhos (um condição para ignora para quem te enviou)
+            id_emissor = pacote["id_rota"]
+            print(f"[{self._router_id}] Recebido LSA de {id_emissor}")
+            
+            # Atualiza a tabela de roteamento
+            if self._estado_roteador.atualizar_tabela(pacote):
+                # Encaminha apenas se conhecemos o IP do vizinho
+                if id_emissor in self._vizinhos_reconhecidos:
+                    ip_vizinho = self._vizinhos_reconhecidos[id_emissor]
+                    self._emissor_lsa.encaminhar_vizinhos(pacote, ip_vizinho)
+                else:
+                    print(f"[{self._router_id}] Vizinho {id_emissor} desconhecido - não encaminhado")
 
     def receber_pacotes(self):
         """
