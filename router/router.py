@@ -12,6 +12,11 @@ import ipaddress
 
 
 def carregar_grafo_com_pesos(csv_path):
+    """ 
+    Carrega um grafo a partir de um arquivo CSV com as colunas 'Origem', 'Destino' e 'Custo'.
+    O custo é considerado como o peso da aresta entre os nós.       
+    Se o custo for '-', considera-se que a conexão é entre um host e um roteador, com peso 1.
+    """
     G = nx.Graph()
     with open(csv_path, newline='') as csvfile:
         leitor = csv.DictReader(csvfile)
@@ -28,6 +33,9 @@ def carregar_grafo_com_pesos(csv_path):
 
 
 class EstadoRoteador:
+    """
+    Classe que representa o estado do roteador, incluindo a tabela de roteamento e os vizinhos conhecidos.
+    """
     __slots__ = ["_tabela_roteamento", "_id_rota",
                  "_dados_vizinhos", "_roteamento"]
 
@@ -140,24 +148,7 @@ class EstadoRoteador:
                         print("    ✅ Sucesso")
                     except subprocess.CalledProcessError as e:
                         print(f"    ❌ Falha: {e}")
-
-def obter_interfaces_com_broadcast():
-
-    interfaces = []
-    for nome, snics in psutil.net_if_addrs().items():
-        for snic in snics:
-            if snic.family == socket.AF_INET:
-                ip = snic.address
-                broadcast = snic.broadcast
-                if ip and broadcast:
-                    interfaces.append({
-                        "interface": nome,
-                        "address": ip,
-                        "broadcast": broadcast
-                    })
-    return interfaces
-
-
+                        
 class EmissorPacoteHello:
     __slots__ = ["_id_rota", "_interfaces", "_vizinhos",
                  "_intervalo_envio", "_porta_comunicacao"]
@@ -235,6 +226,7 @@ class EmissorPacoteHello:
 
 
 class EmissorPacoteLSA:
+    
     __slots__ = ["_id_rota", "_vizinhos_ip", "_vizinhos_custo", "_intervalo_envio",
                  "_porta_comunicacao", "_numero_sequencia", "_iniciado", "_lsdb", "_interfaces"]
 
@@ -372,6 +364,7 @@ class Roteador:
             self._processar_hello(pacote)
         elif tipo_pacote == "LSA":
             self._processar_lsa(pacote)
+            
     def _processar_hello(self, pacote):
         """Processa pacotes HELLO recebidos."""
         try:
