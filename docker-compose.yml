@@ -26,10 +26,8 @@ services:
         ipv4_address: 192.168.1.10
       router1_host2_net:
         ipv4_address: 192.168.2.10
-      router1_router15_net:
+      router1_router11_net:
         ipv4_address: 10.10.1.10
-      router1_router8_net:
-        ipv4_address: 10.10.2.10
   router2_host1:
     build: ./host
     container_name: router2_host1
@@ -57,8 +55,10 @@ services:
       router2_host2_net:
         ipv4_address: 192.168.4.10
       router2_router3_net:
+        ipv4_address: 10.10.2.10
+      router2_router5_net:
         ipv4_address: 10.10.3.10
-      router2_router8_net:
+      router2_router7_net:
         ipv4_address: 10.10.4.10
   router3_host1:
     build: ./host
@@ -87,12 +87,12 @@ services:
       router3_host2_net:
         ipv4_address: 192.168.6.10
       router2_router3_net:
-        ipv4_address: 10.10.3.2
+        ipv4_address: 10.10.2.2
       router3_router7_net:
         ipv4_address: 10.10.5.10
-      router3_router11_net:
+      router3_router4_net:
         ipv4_address: 10.10.6.10
-      router3_router14_net:
+      router3_router15_net:
         ipv4_address: 10.10.7.10
   router4_host1:
     build: ./host
@@ -120,9 +120,11 @@ services:
         ipv4_address: 192.168.7.10
       router4_host2_net:
         ipv4_address: 192.168.8.10
+      router3_router4_net:
+        ipv4_address: 10.10.6.2
       router4_router8_net:
         ipv4_address: 10.10.8.10
-      router4_router6_net:
+      router4_router12_net:
         ipv4_address: 10.10.9.10
   router5_host1:
     build: ./host
@@ -150,7 +152,9 @@ services:
         ipv4_address: 192.168.9.10
       router5_host2_net:
         ipv4_address: 192.168.10.10
-      router5_router15_net:
+      router2_router5_net:
+        ipv4_address: 10.10.3.2
+      router5_router6_net:
         ipv4_address: 10.10.10.10
   router6_host1:
     build: ./host
@@ -178,10 +182,8 @@ services:
         ipv4_address: 192.168.11.10
       router6_host2_net:
         ipv4_address: 192.168.12.10
-      router4_router6_net:
-        ipv4_address: 10.10.9.2
-      router6_router10_net:
-        ipv4_address: 10.10.11.10
+      router5_router6_net:
+        ipv4_address: 10.10.10.2
   router7_host1:
     build: ./host
     container_name: router7_host1
@@ -208,10 +210,10 @@ services:
         ipv4_address: 192.168.13.10
       router7_host2_net:
         ipv4_address: 192.168.14.10
+      router2_router7_net:
+        ipv4_address: 10.10.4.2
       router3_router7_net:
         ipv4_address: 10.10.5.2
-      router7_router11_net:
-        ipv4_address: 10.10.12.10
   router8_host1:
     build: ./host
     container_name: router8_host1
@@ -238,10 +240,6 @@ services:
         ipv4_address: 192.168.15.10
       router8_host2_net:
         ipv4_address: 192.168.16.10
-      router1_router8_net:
-        ipv4_address: 10.10.2.2
-      router2_router8_net:
-        ipv4_address: 10.10.4.2
       router4_router8_net:
         ipv4_address: 10.10.8.2
   router9_host1:
@@ -270,10 +268,8 @@ services:
         ipv4_address: 192.168.17.10
       router9_host2_net:
         ipv4_address: 192.168.18.10
-      router9_router15_net:
-        ipv4_address: 10.10.13.10
-      router9_router12_net:
-        ipv4_address: 10.10.14.10
+      router9_router10_net:
+        ipv4_address: 10.10.11.10
   router10_host1:
     build: ./host
     container_name: router10_host1
@@ -300,8 +296,10 @@ services:
         ipv4_address: 192.168.19.10
       router10_host2_net:
         ipv4_address: 192.168.20.10
-      router6_router10_net:
+      router9_router10_net:
         ipv4_address: 10.10.11.2
+      router10_router11_net:
+        ipv4_address: 10.10.12.10
   router11_host1:
     build: ./host
     container_name: router11_host1
@@ -328,10 +326,14 @@ services:
         ipv4_address: 192.168.21.10
       router11_host2_net:
         ipv4_address: 192.168.22.10
-      router3_router11_net:
-        ipv4_address: 10.10.6.2
-      router7_router11_net:
+      router1_router11_net:
+        ipv4_address: 10.10.1.2
+      router10_router11_net:
         ipv4_address: 10.10.12.2
+      router11_router12_net:
+        ipv4_address: 10.10.13.10
+      router11_router13_net:
+        ipv4_address: 10.10.14.10
   router12_host1:
     build: ./host
     container_name: router12_host1
@@ -358,8 +360,10 @@ services:
         ipv4_address: 192.168.23.10
       router12_host2_net:
         ipv4_address: 192.168.24.10
-      router9_router12_net:
-        ipv4_address: 10.10.14.2
+      router4_router12_net:
+        ipv4_address: 10.10.9.2
+      router11_router12_net:
+        ipv4_address: 10.10.13.2
   router13_host1:
     build: ./host
     container_name: router13_host1
@@ -386,8 +390,8 @@ services:
         ipv4_address: 192.168.25.10
       router13_host2_net:
         ipv4_address: 192.168.26.10
-      router13_router14_net:
-        ipv4_address: 10.10.15.10
+      router11_router13_net:
+        ipv4_address: 10.10.14.2
   router14_host1:
     build: ./host
     container_name: router14_host1
@@ -414,10 +418,8 @@ services:
         ipv4_address: 192.168.27.10
       router14_host2_net:
         ipv4_address: 192.168.28.10
-      router3_router14_net:
-        ipv4_address: 10.10.7.2
-      router13_router14_net:
-        ipv4_address: 10.10.15.2
+      router14_router15_net:
+        ipv4_address: 10.10.15.10
   router15_host1:
     build: ./host
     container_name: router15_host1
@@ -444,12 +446,10 @@ services:
         ipv4_address: 192.168.29.10
       router15_host2_net:
         ipv4_address: 192.168.30.10
-      router1_router15_net:
-        ipv4_address: 10.10.1.2
-      router5_router15_net:
-        ipv4_address: 10.10.10.2
-      router9_router15_net:
-        ipv4_address: 10.10.13.2
+      router3_router15_net:
+        ipv4_address: 10.10.7.2
+      router14_router15_net:
+        ipv4_address: 10.10.15.2
 networks:
   router1_host1_net:
     driver: bridge
@@ -601,22 +601,22 @@ networks:
     ipam:
       config:
       - subnet: 192.168.30.0/24
-  router1_router15_net:
+  router1_router11_net:
     driver: bridge
     ipam:
       config:
       - subnet: 10.10.1.0/24
-  router1_router8_net:
-    driver: bridge
-    ipam:
-      config:
-      - subnet: 10.10.2.0/24
   router2_router3_net:
     driver: bridge
     ipam:
       config:
+      - subnet: 10.10.2.0/24
+  router2_router5_net:
+    driver: bridge
+    ipam:
+      config:
       - subnet: 10.10.3.0/24
-  router2_router8_net:
+  router2_router7_net:
     driver: bridge
     ipam:
       config:
@@ -626,12 +626,12 @@ networks:
     ipam:
       config:
       - subnet: 10.10.5.0/24
-  router3_router11_net:
+  router3_router4_net:
     driver: bridge
     ipam:
       config:
       - subnet: 10.10.6.0/24
-  router3_router14_net:
+  router3_router15_net:
     driver: bridge
     ipam:
       config:
@@ -641,37 +641,37 @@ networks:
     ipam:
       config:
       - subnet: 10.10.8.0/24
-  router4_router6_net:
+  router4_router12_net:
     driver: bridge
     ipam:
       config:
       - subnet: 10.10.9.0/24
-  router5_router15_net:
+  router5_router6_net:
     driver: bridge
     ipam:
       config:
       - subnet: 10.10.10.0/24
-  router6_router10_net:
+  router9_router10_net:
     driver: bridge
     ipam:
       config:
       - subnet: 10.10.11.0/24
-  router7_router11_net:
+  router10_router11_net:
     driver: bridge
     ipam:
       config:
       - subnet: 10.10.12.0/24
-  router9_router15_net:
+  router11_router12_net:
     driver: bridge
     ipam:
       config:
       - subnet: 10.10.13.0/24
-  router9_router12_net:
+  router11_router13_net:
     driver: bridge
     ipam:
       config:
       - subnet: 10.10.14.0/24
-  router13_router14_net:
+  router14_router15_net:
     driver: bridge
     ipam:
       config:

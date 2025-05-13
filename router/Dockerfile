@@ -9,19 +9,13 @@ RUN apt-get update && apt-get install -y \
   traceroute \
   && rm -rf /var/lib/apt/lists/*
 
-WORKDIR /app
-# Copia o script router.py e o CSV a partir do diretório raiz (contexto de build)
+RUN pip install psutil
+RUN pip install --no-cache-dir networkx
+RUN echo "net.ipv4.ip_forward=1" >> /etc/sysctl.conf
+
+WORKDIR /app 
 COPY router.py .
 COPY conexoes_rede.csv .
 
-# Instala a biblioteca necessária
-RUN pip install --no-cache-dir networkx
 
-# Instala psutil normalmente
-RUN pip install psutil
-
-# Ativa roteamento IP
-RUN echo "net.ipv4.ip_forward=1" >> /etc/sysctl.conf
-
-# Comando padrão ao iniciar o container
-CMD ["python","-u", "router.py"]
+CMD ["python","-u", "/app/router.py"]
