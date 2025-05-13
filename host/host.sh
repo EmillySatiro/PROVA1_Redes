@@ -9,8 +9,8 @@ if [ -z "$IP" ]; then
     exit 1
 fi
 
-# Define o gateway padrão como .2 
-gateway=$(echo $IP | cut -d. -f1-3).2
+# Define o gateway padrão como .10 
+gateway=$(echo $IP | cut -d. -f1-3).10
 
 # Remove rota default antiga, se existir, e define a nova rota default via $gateway
 ip route del default 2>/dev/null

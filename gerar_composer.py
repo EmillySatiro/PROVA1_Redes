@@ -43,6 +43,7 @@ with open("router/conexoes_rede.csv", mode='w', newline='') as csvfile:
             compose['services'][host_name] = {
                 'build': './host',
                 'container_name': host_name,
+                'cap_add': ['NET_ADMIN'],
                 'networks': {
                     net_name: {'ipv4_address': ip_host}
                 }

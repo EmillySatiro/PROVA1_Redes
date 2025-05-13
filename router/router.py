@@ -8,6 +8,7 @@ import os
 import networkx as nx
 import csv
 import traceback
+import ipaddress
 
 
 def carregar_grafo_com_pesos(csv_path):
@@ -343,6 +344,12 @@ class Roteador:
                 if snic.family == socket.AF_INET:
                     ip = snic.address
                     broadcast = snic.broadcast
+
+                    if(snic.address.startswith("192.168.")):
+                        ip = ipaddress.ip_address(ip)
+                        rede = ipaddress.IPv4Network(f"{ip}/24", strict=False)
+                        ip = f"{rede.network_address}/24"
+
                     if ip and broadcast:
                         interfaces.append({
                             "interface": nome,
