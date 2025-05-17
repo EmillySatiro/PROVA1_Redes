@@ -4,11 +4,29 @@ import yaml
 import matplotlib.pyplot as plt
 import csv
 
+"""
+Este script automatiza a criação de uma topologia de rede simulada, incluindo roteadores e hosts,
+utilizando containers Docker. Ele gera automaticamente:
+
+- Um arquivo 'docker-compose.yml' com a configuração de redes e containers.
+- Um arquivo CSV ('conexoes_rede.csv') descrevendo as conexões entre dispositivos.
+- Uma imagem PNG ('Topologia_rede.png') visualizando a topologia da rede.
+
+Funcionalidades:
+-----------------
+- Criação de grafo com roteadores e links aleatórios.
+- Associação de hosts a cada roteador com sub-redes individuais.
+- Geração de conexões ponto-a-ponto entre roteadores com endereçamento IP.
+- Exportação de um arquivo docker-compose.yml com a configuração da rede.
+- Exportação de um arquivo CSV simplificado com informações das conexões.
+- Visualização gráfica da topologia da rede em arquivo de imagem.
+"""
+
 # CONFIGURAÇÕES
 num_roteadores = 15
 hosts_por_roteador = 2
 
-# Gerar grafo conectado com pesos'
+
 grafo = nx.connected_watts_strogatz_graph(num_roteadores, k=2, p=0.7)
 for (u, v) in grafo.edges():
     grafo.edges[u, v]['weight'] = random.randint(1, 10)
@@ -33,7 +51,7 @@ with open("router/conexoes_rede.csv", mode='w', newline='') as csvfile:
         router_networks = []
 
         for h in range(hosts_por_roteador):
-            host_name = f"{router_name}_host{h+1}"  # Nomenclatura ajustada para router01_host01, router01_host02, etc.
+            host_name = f"{router_name}_host{h+1}"  
             net_name = f"{router_name}_host{h+1}_net"
             subnet = f"192.168.{subrede_base}.0/24"
             ip_host = f"192.168.{subrede_base}.2"
@@ -75,8 +93,8 @@ with open("router/conexoes_rede.csv", mode='w', newline='') as csvfile:
 
     # Conexões ponto-a-ponto entre roteadores
     for (u, v, d) in grafo.edges(data=True):
-        router_u = f"router{u+1}"  # Ajuste para router01, router02, etc.
-        router_v = f"router{v+1}"  # Ajuste para router01, router02, etc.
+        router_u = f"router{u+1}"  
+        router_v = f"router{v+1}"  
         net_name = f"{router_u}_{router_v}_net"
         subnet = f"10.10.{pontoaponto_base}.0/24"
         ip_u = f"10.10.{pontoaponto_base}.10"

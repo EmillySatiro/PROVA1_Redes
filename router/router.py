@@ -10,7 +10,18 @@ import csv
 import traceback
 import ipaddress
 
+""" 
+Este script simula o funcionamento básico de um protocolo de roteamento entre roteadores em uma rede IP.
 
+FUNCIONALIDADES:
+--------------------
+- Carregamento de um grafo de rede com pesos a partir de arquivo CSV.
+- Emissão periódica de pacotes HELLO para descoberta e manutenção de vizinhos.
+- Emissão periódica de pacotes LSA (Link-State Advertisement) com informações de topologia.
+- Cálculo das rotas mais curtas entre roteadores usando o algoritmo de Dijkstra.
+- Atualização e aplicação dinâmica de rotas na tabela de roteamento do sistema.
+- Prints de depuração comentados, descomente caso precise analisar algo mais a fundo.
+"""
 def carregar_grafo_com_pesos(csv_path):
     """ 
     Carrega um grafo a partir de um arquivo CSV com as colunas 'Origem', 'Destino' e 'Custo'.
@@ -27,14 +38,22 @@ def carregar_grafo_com_pesos(csv_path):
             if custo != '-':
                 G.add_edge(origem, destino, weight=int(custo))
             else:
-                # Para conexões host-roteador
                 G.add_edge(origem, destino, weight=1)
     return G
 
 
 class EstadoRoteador:
     """
-    Classe que representa o estado do roteador, incluindo a tabela de roteamento e os vizinhos conhecidos.
+    Representa o estado de roteamento de um roteador em uma rede.
+
+    Esta classe mantém uma tabela de roteamento com informações recebidas de outros roteadores
+    e calcula os melhores caminhos até cada destino, aplicando as rotas no sistema.
+
+    Atributos:
+        _id_rota (str): Identificador único deste roteador.
+        _dados_vizinhos (dict[str, str]): Mapeia o ID dos roteadores vizinhos para seus respectivos IPs.
+        _tabela_roteamento (dict): Armazena as entradas de roteamento conhecidas.
+        _roteamento (dict): Guarda as rotas calculadas (destino -> próximo salto).
     """
     __slots__ = ["_tabela_roteamento", "_id_rota",
                  "_dados_vizinhos", "_roteamento"]
@@ -47,7 +66,18 @@ class EstadoRoteador:
         self._roteamento = {}
 
     def _criar_entrada_tabela(self, numero_seq, timestamp, enderecos, links):
+        """
+        Cria uma entrada padronizada para a tabela de roteamento.
 
+        Args:
+            numero_seq (int): Número de sequência da atualização.
+            timestamp (float): Marca temporal da atualização.
+            enderecos (list): Lista de endereços IP associados ao roteador.
+            links (dict): Dicionário de vizinhos com seus custos de link.
+
+        Returns:
+            dict: Estrutura de entrada para a tabela de roteamento.
+        """
         return {
             "numero_sequencia": numero_seq,
             "timestamp": timestamp,
@@ -57,16 +87,20 @@ class EstadoRoteador:
 
     def atualizar_tabela(self, pacote):
         """
-        🛠️ Atualiza a tabela com o pacote recebido.
+        Atualiza a tabela de roteamento com base em um pacote recebido.
+
+        Args:
+            pacote (dict): Pacote contendo informações de roteamento de outro roteador.
+
+        Returns:
+            bool: True se a tabela foi atualizada, False se o pacote foi ignorado.
         """
         id_rota = pacote["id_rota"]
         numero_seq = pacote["numero_sequencia"]
 
-        print(f"Pacote recebido: {pacote}")
-
         entrada = self._tabela_roteamento.get(id_rota)
         if entrada and numero_seq <= entrada["numero_sequencia"]:
-            print(f"Pacote ignorado (sequência antiga): {pacote}")
+            #print(f"Pacote ignorado (sequência antiga): {pacote}")
             return False
 
         print(f"Atualizando tabela de roteamento com id_rota {id_rota} e seq {numero_seq}")
@@ -79,16 +113,17 @@ class EstadoRoteador:
                 print(f"Novo roteador descoberto: {vizinho}")
                 self._tabela_roteamento[vizinho] = self._criar_entrada_tabela(-1, 0, [], {})
 
-        # CHAMADA DO ALGORITMO DE DIJKSTRA MANUAL
         rotas = self._calcular_rotas_minimas()
-        
         self._atualizar_roteamento(rotas)
         self._aplicar_rotas()
         return True
 
     def _calcular_rotas_minimas(self):
         """
-        Implementa o algoritmo de Dijkstra usando os dados em self._tabela_roteamento.
+        Calcula as rotas de menor custo para cada destino conhecido usando o algoritmo de Dijkstra.
+
+        Returns:
+            dict: Mapeia cada destino ao seu nó anterior no caminho mínimo.
         """
         distancias = {n: float('inf') for n in self._tabela_roteamento}
         anteriores = {n: None for n in self._tabela_roteamento}
@@ -97,7 +132,6 @@ class EstadoRoteador:
         distancias[self._id_rota] = 0
 
         while len(visitados) < len(self._tabela_roteamento):
-            # Seleciona o nó com menor distância ainda não visitado
             no_atual = min((n for n in distancias if n not in visitados),
                         key=lambda n: distancias[n], default=None)
 
@@ -119,6 +153,12 @@ class EstadoRoteador:
 
 
     def _atualizar_roteamento(self, caminhos: dict):
+        """
+        Atualiza a tabela de roteamento com base nos caminhos calculados.
+
+        Args:
+            caminhos (dict): Dicionário que mapeia destinos ao nó anterior no caminho mínimo.
+        """
         self._roteamento.clear()
         for destino, gateway in caminhos.items():
             if destino != self._id_rota:
@@ -130,9 +170,12 @@ class EstadoRoteador:
         self._roteamento = dict(sorted(self._roteamento.items()))
 
     def _aplicar_rotas(self):
-        print("Tabela de roteamento atual:")
-        for destino, dados in self._tabela_roteamento.items():
-            print(f"  {destino}: {dados}")
+        """
+        Aplica as rotas calculadas ao sistema operacional via comandos 'ip route'.
+        """
+        # print("Tabela de roteamento atual:")
+        # for destino, dados in self._tabela_roteamento.items():
+        #     print(f"  {destino}: {dados}")
         
         print("\nRotas calculadas:")
         for destino, gateway in self._roteamento.items():
@@ -150,20 +193,25 @@ class EstadoRoteador:
                         print(f"    ❌ Falha: {e}")
                         
 class EmissorPacoteHello:
+    """
+    Classe responsável por emitir periodicamente pacotes do tipo HELLO para os roteadores vizinhos
+    em uma rede de roteamento.
+
+    A classe gerencia o envio desses pacotes via broadcast em todas as interfaces configuradas,
+    permitindo que os vizinhos saibam que este roteador está ativo e compartilha informações básicas sobre si.
+
+    Atributos:
+        _id_rota (str): Identificador único do roteador.
+        _interfaces (list[dict[str, str]]): Lista de interfaces de rede, onde cada interface é um dicionário contendo pelo menos os campos 'address' e 'broadcast'.
+        _vizinhos (dict[str, str]): Dicionário dos vizinhos conhecidos, onde a chave é o ID do roteador vizinho.
+        _intervalo_envio (int): Intervalo, em segundos, entre o envio de pacotes HELLO.
+        _porta_comunicacao (int): Porta UDP utilizada para envio dos pacotes HELLO.
+    """
     __slots__ = ["_id_rota", "_interfaces", "_vizinhos",
                  "_intervalo_envio", "_porta_comunicacao"]
 
     def __init__(self, id_rota: str, interfaces: list[dict[str, str]], vizinhos: dict[str, str], intervalo_envio: int = 10, porta_comunicacao: int = 5000):
-        """
-        Inicializa o emissor de pacotes HELLO, configurando o roteador, as interfaces e os vizinhos.
-
-        Parâmetros:
-        id_rota (str): Identificador do roteador.
-        interfaces (list[dict]): Lista com informações das interfaces de rede.
-        vizinhos (dict): Dicionário contendo os vizinhos com seus endereços IP.
-        intervalo_envio (int, opcional): Intervalo entre os envios de pacotes (em segundos). Padrão é 10.
-        porta_comunicacao (int, opcional): Porta utilizada para comunicação dos pacotes. Padrão é 5000.
-        """
+    
         self._id_rota = id_rota
         self._interfaces = interfaces
         self._vizinhos = vizinhos
@@ -248,14 +296,11 @@ class EmissorPacoteLSA:
             """
             while True:
                 try:
-                    # 1. Gera novo pacote LSA
                     pacote = self._gerar_pacote_lsa()
                     mensagem = json.dumps(pacote).encode("utf-8")
                     
-                    # 2. Atualiza a própria tabela primeiro
                     self._lsdb.atualizar_tabela(pacote)
                     
-                    # 3. Envia para todos os vizinhos
                     for vizinho_id, ip_vizinho in self._vizinhos_ip.items():
                         try:
                             with socket.socket(socket.AF_INET, socket.SOCK_DGRAM) as sock:
@@ -264,12 +309,11 @@ class EmissorPacoteLSA:
                         except Exception as e:
                             print(f"Erro ao enviar LSA para {vizinho_id}: {e}")
                     
-                    # 4. Aguarda o intervalo
                     time.sleep(self._intervalo_envio)
                     
                 except Exception as e:
                     print(f"Erro grave no envio periódico de LSA: {e}")
-                    time.sleep(5)  # Espera antes de tentar novamente
+                    time.sleep(5)  
 
     def encaminhar_vizinhos(self, pacote, ip_remetente):
         """Encaminha o LSA para todos os vizinhos exceto o remetente original."""
@@ -298,7 +342,7 @@ class EmissorPacoteLSA:
             "links": self._vizinhos_custo.copy()
         }
     
-        print(f"[{self._id_rota}] Gerado LSA (seq {self._numero_sequencia}): {pacote}")
+        # print(f"[{self._id_rota}] Gerado LSA (seq {self._numero_sequencia}): {pacote}")
         return pacote
 
     def iniciar_emissao(self):
@@ -311,8 +355,22 @@ class EmissorPacoteLSA:
 
 class Roteador:
     """
-    Classe que gerencia a operação do roteador, incluindo a comunicação com os vizinhos,
-    manutenção da tabela de roteamento e envio de pacotes HELLO e LSA.
+    Classe responsável pelo envio periódico de pacotes LSA (Link-State Advertisements)
+    para os vizinhos de um roteador em uma rede de roteamento baseado em estado de enlace.
+
+    Os pacotes LSA contêm informações sobre os links e custos entre o roteador e seus vizinhos,
+    permitindo a atualização e manutenção da tabela de estado de enlace (LSDB).
+
+    Atributos:
+        _id_rota (str): Identificador único do roteador.
+        _vizinhos_ip (dict[str, str]): Mapeamento do ID dos vizinhos para seus respectivos endereços IP.
+        _vizinhos_custo (dict[str, int]): Mapeamento do ID dos vizinhos para o custo do link.
+        _intervalo_envio (int): Intervalo em segundos para o envio periódico dos pacotes LSA.
+        _porta_comunicacao (int): Porta UDP usada para comunicação dos pacotes LSA.
+        _numero_sequencia (int): Número sequencial usado para versionar os pacotes LSA.
+        _iniciado (bool): Indica se o emissor de LSA já foi iniciado.
+        _lsdb (EstadoRoteador): Estrutura de dados que mantém a tabela de estado de enlace.
+        _interfaces (list[dict[str, str]]): Lista de interfaces de rede do roteador.
     """
 
     def __init__(self, router_id: str, porta_comunicacao: int = 5000, intervalo_envio: int = 10):
@@ -324,12 +382,17 @@ class Roteador:
         self._vizinhos_reconhecidos = {}
         self._estado_roteador = EstadoRoteador(router_id, self._vizinhos_reconhecidos)
         self._grafo = carregar_grafo_com_pesos("conexoes_rede.csv")
-        # Criando os emissores
         self._emissor_hello = EmissorPacoteHello(
             router_id, self._interfaces, self._vizinhos, intervalo_envio, porta_comunicacao)
         self._emissor_lsa = EmissorPacoteLSA(router_id, self._vizinhos_reconhecidos, self._vizinhos, self._interfaces, self._estado_roteador, intervalo_envio, porta_comunicacao)
 
     def obter_interfaces_com_broadcast(self):
+        """
+        Obtém uma lista das interfaces de rede do sistema que possuem endereços IPv4 e
+        informações de broadcast associadas.
+        Para interfaces com IPs que começam com "192.168.", a função converte o endereço IP
+        para o endereço da rede /24 correspondente (exemplo: 192.168.1.10 vira 192.168.1.0/24).
+        """
         interfaces = []
         for nome, snics in psutil.net_if_addrs().items():
             for snic in snics:
@@ -358,6 +421,9 @@ class Roteador:
             target=self._emissor_lsa.iniciar_emissao, daemon=True).start()
 
     def processar_pacote(self, pacote):
+        """
+        Processa pacotes recebidos, identificando seu tipo e chamando o método apropriado.
+        """
         tipo_pacote = pacote.get("tipo")
         
         if tipo_pacote == "HELLO":
@@ -369,15 +435,13 @@ class Roteador:
         """Processa pacotes HELLO recebidos."""
         try:
             id_emissor = pacote["id_rota"]
-            if id_emissor != self._router_id:  # Ignora pacotes do próprio roteador
+            if id_emissor != self._router_id:  
                 print(f"[{self._router_id}] Recebido HELLO de {id_emissor}")
                 
-                # Verifica se é um vizinho conhecido no grafo
                 if self._grafo.has_edge(id_emissor, self._router_id):
                     custo = self._grafo[id_emissor][self._router_id]["weight"]
                     self._vizinhos[id_emissor] = custo
                     
-                    # Registra o IP do vizinho se estiver no pacote
                     if "ip_address" in pacote:
                         self._vizinhos_reconhecidos[id_emissor] = pacote["ip_address"]
                         print(f"[{self._router_id}] Registrado vizinho {id_emissor} - IP: {pacote['ip_address']}, Custo: {custo}")
@@ -386,15 +450,14 @@ class Roteador:
             traceback.print_exc()
             
     def _processar_lsa(self, pacote):
+        """Processa pacotes LSA recebidos."""
         id_emissor = pacote["id_rota"]
         
-        # Ignora pacotes do próprio roteador
         if id_emissor == self._router_id:
             return
         
         print(f"[{self._router_id}] Recebido LSA de {id_emissor} (seq: {pacote['numero_sequencia']})")
         
-        # Verifica se o pacote é novo
         entrada_atual = self._estado_roteador._tabela_roteamento.get(id_emissor, {})
         seq_atual = entrada_atual.get("numero_sequencia", -1)
         seq_recebido = pacote["numero_sequencia"]
@@ -403,7 +466,6 @@ class Roteador:
             print(f"[{self._router_id}] Atualizando tabela com LSA de {id_emissor}")
             self._estado_roteador.atualizar_tabela(pacote)
             
-            # Encaminha para todos os vizinhos EXCETO quem enviou
             ip_remetente = pacote.get("ip_address")
             if ip_remetente:
                 print(f"[{self._router_id}] Encaminhando LSA para outros vizinhos")
@@ -432,7 +494,6 @@ class Roteador:
                 traceback.print_exc()
 
     def iniciar(self):
-        # Inicia a comunicação com os vizinhos e começa a ouvir pacotes
         threading.Thread(target=self.receber_pacotes, daemon=True).start()
         self.iniciar_comunicacao()
 
@@ -440,12 +501,11 @@ class Roteador:
             time.sleep(1)
 
 
-# Exemplo de uso
 if __name__ == "__main__":
     router_id = os.getenv("CONTAINER_NAME")
     if (not router_id):
         raise ValueError(
-            "NÃO ACHOU O NOME DO CONTAINER AHAHHAHAHAHAHA"
+            "CONTAINER  NÃO ENCONTRADO."
         )
     roteador = Roteador(router_id)
     roteador.iniciar()

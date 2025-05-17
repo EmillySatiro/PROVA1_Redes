@@ -101,7 +101,7 @@ for ROUTER in $ROUTERS; do
                     ROUTER_SUCCESS=$((ROUTER_SUCCESS+1))
                     TOTAL_SUCCESS=$((TOTAL_SUCCESS+1))
                     PING_SUCCESS=1
-                    break  # Se conseguir pingar pelo menos um IP, considera sucesso
+                    break  # Se conseguir pingar pelo menos um IP, considera sucessoo
                 else
                     ROUTER_FAILURE=$((ROUTER_FAILURE+1))
                     TOTAL_FAILURE=$((TOTAL_FAILURE+1))

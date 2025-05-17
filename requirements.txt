@@ -1,0 +1,5 @@
+matplotlib==3.8.4
+networkx==3.4.2
+psutil==7.0.0
+PyYAML==6.0.2
+PyYAML==6.0.2
