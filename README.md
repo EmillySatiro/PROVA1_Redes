@@ -14,7 +14,7 @@ Este projeto implementa uma plataforma avançada para simulação de topologias 
 ## 📂 Estrutura do Repositório
 
 host/: Scripts e configurações relacionados aos hosts da rede.  
-router/: Scripts e configurações para os roteadores( Envio e recebimentos dos pacotes HELLO E SLA, controle e atualização da tabela de roteamento dos roteadores da rede).  
+router/: Scripts e configurações para os roteadores( Envio e recebimentos dos pacotes HELLO E LSA, controle e atualização da tabela de roteamento dos roteadores da rede).  
 Topologia_rede.png: Grafo ilustrativo da topologia da rede simulada.  
 docker-compose.yml: Arquivo para orquestrar os containers Docker.  
 gerar_composer.py: Script Python para gerar configurações automaticamente.  
