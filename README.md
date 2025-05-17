@@ -34,8 +34,7 @@ Requerimentos.txt: Lista das dependências necessárias para o projeto.
 1. Clone este repositório:
 
    ```bash
-   git clone https://github.com/EmillySatiro/PROVA1_Redes.git
-   cd PROVA1_Redes
+   git clone https://github.com/EmillySatiro/SimulNet_Docker.git
 
 2. Crie e ative um ambiente virtual Python (recomendado):
    ```
