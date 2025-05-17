@@ -14,21 +14,20 @@ Este projeto implementa uma plataforma avançada para simulação de topologias 
 ## 📂 Estrutura do Repositório
 
 host/: Scripts e configurações relacionados aos hosts da rede.  
-router/: Scripts e configurações para os roteadores.  
-Topologia_rede.png: Diagrama ilustrativo da topologia da rede simulada.  
+router/: Scripts e configurações para os roteadores( Envio e recebimentos dos pacotes HELLO E SLA, controle e atualização da tabela de roteamento dos roteadores da rede).  
+Topologia_rede.png: Grafo ilustrativo da topologia da rede simulada.  
 docker-compose.yml: Arquivo para orquestrar os containers Docker.  
 gerar_composer.py: Script Python para gerar configurações automaticamente.  
-ping.sh: Script para testar conectividade entre hosts.  
+ping.sh: Script para testar conectividade entre roteadores.  
 ping_host.sh: Script para testar conectividade com host específico.  
 Requerimentos.txt: Lista das dependências necessárias para o projeto.
 
 ## 🧩 Componentes Principais
 
-- **Hosts:** Nós finais da rede simulada, configurados para enviar e receber tráfego.  
-- **Roteadores:** Dispositivos responsáveis pelo encaminhamento de pacotes entre os hosts.  
-- **Scripts de Automação:** Código Python para geração dinâmica das configurações.  
-- **Scripts de Teste:** Scripts Shell que validam a comunicação e latência entre os dispositivos.  
-- **Arquivo de Orquestração:** `docker-compose.yml` que define os containers, redes e suas interligações.  
+- O sistema utiliza **pacotes Hello**, que permitem a descoberta e manutenção das vizinhanças entre dispositivos na rede simulada.  
+- Utiliza **pacotes LSA (Link-State Advertisements)** para atualizar e propagar informações sobre o estado das ligações, garantindo que a topologia da rede esteja sempre atualizada.  
+- Mantém uma **tabela de roteamento dinâmica** que reflete as melhores rotas calculadas usando o **(algoritmo de Dijkstra)** em tempo real para o encaminhamento eficiente dos pacotes entre os hosts.  
+- O projeto considera aspectos de segurança e privacidade, alinhando-se às diretrizes da **LGPD** para proteção dos dados simulados durante as operações.
 
 ## ⚙️ Como Utilizar
 
