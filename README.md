@@ -1,4 +1,4 @@
-# 🚀 Simulação de Topologia de Redes Distribuídas Utilizando Docker e Automação
+# 🚀 Simulação de Topologia de Redes Distribuídas Utilizando Docker.
 
 ## 📖 Descrição Geral
 
