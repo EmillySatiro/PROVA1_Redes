@@ -498,7 +498,7 @@ class Roteador:
         self.iniciar_comunicacao()
 
         while True:
-            time.sleep(1)
+            time.sleep(25)
 
 
 if __name__ == "__main__":
